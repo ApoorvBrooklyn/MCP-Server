@@ -33,7 +33,6 @@ def get_audio_from_youtube(url: str) -> str:
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',
             }],
             'noplaylist': True,  # Don't download playlists
         }
@@ -47,11 +46,13 @@ def get_audio_from_youtube(url: str) -> str:
             safe_title = "".join(c for c in video_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
             safe_title = safe_title[:100]  # Limit length
             
-            # Update output template with safe title
-            ydl_opts['outtmpl'] = str(downloads_dir / f'{safe_title}.%(ext)s')
+            # Create new configuration with safe title
+            download_opts = ydl_opts.copy()
+            download_opts['outtmpl'] = str(downloads_dir / f'{safe_title}.%(ext)s')
             
-            # Download the audio
-            ydl.download([url])
+            # Download the audio with new configuration
+            with yt_dlp.YoutubeDL(download_opts) as ydl_download:
+                ydl_download.download([url])
             
             # Find the downloaded file
             audio_files = list(downloads_dir.glob(f"{safe_title}.*"))
