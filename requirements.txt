@@ -33,3 +33,7 @@ Pillow>=10.0.0
 
 # JSON handling and utilities
 aiofiles>=23.0.0
+
+# Streamlit frontend
+streamlit>=1.28.0
+streamlit-audio-recorder>=0.0.8

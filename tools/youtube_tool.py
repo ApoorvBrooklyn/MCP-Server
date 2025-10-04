@@ -30,12 +30,12 @@ def get_audio_from_youtube(url: str) -> str:
         ydl_opts = {
             'format': 'bestaudio/best',  # Best audio quality
             'outtmpl': str(downloads_dir / '%(title)s.%(ext)s'),  # Output template
-            'extractaudio': True,  # Extract audio
-            'audioformat': 'mp3',  # Convert to MP3
-            'audioquality': '192K',  # Audio quality
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
             'noplaylist': True,  # Don't download playlists
-            'quiet': True,  # Suppress output
-            'no_warnings': True,  # Suppress warnings
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

@@ -30,22 +30,42 @@ A complete MCP (Model Context Protocol) server that automatically processes long
 
 ## 🚀 Quick Start
 
-1. **Clone and setup**:
+### Option 1: Streamlit Demo (Recommended) 🎨
+1. **Install dependencies**:
    ```bash
-   git clone <repository-url>
-   cd viral-moment-pipeline
-   pip install -r requirements.txt
+   ./install.sh
    ```
 
-2. **Configure API keys**:
+2. **Get your API keys**:
+   - **Google Gemini**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey) → Create API key
+   - **Figma**: Visit [Figma Developers](https://www.figma.com/developers/api#access-tokens) → Generate token
+
+3. **Configure your .env file**:
    ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
+   nano .env
+   ```
+   Update with your real API keys:
+   ```
+   GOOGLE_API_KEY=your_actual_google_api_key
+   FIGMA_API_KEY=your_actual_figma_token
+   FIGMA_FILE_ID=your_figma_file_id
    ```
 
-3. **Run the server**:
+4. **Launch the beautiful demo**:
    ```bash
-   python main.py
+   python3 run_demo.py
+   ```
+   The demo will open at: http://localhost:8501
+
+### Option 2: Command Line Interface 💻
+1. **Test the pipeline**:
+   ```bash
+   python3 test_pipeline.py
+   ```
+
+2. **Start the MCP server**:
+   ```bash
+   python3 main.py
    ```
 
 ## 🔧 API Keys Setup
