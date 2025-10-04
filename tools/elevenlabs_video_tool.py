@@ -1114,6 +1114,88 @@ def get_available_voices() -> list[Dict[str, Any]]:
         raise Exception(f"Failed to get available voices: {str(e)}")
 
 
+def create_heygen_video_with_natural_audio(
+    script: str,
+    title: str = "Viral Moment"
+) -> str:
+    """
+    Create a high-quality video using HeyGen with natural, listenable audio
+    
+    Args:
+        script (str): The script text to convert to video
+        title (str): Video title
+        
+    Returns:
+        str: Path to the generated video file
+    """
+    try:
+        # Create output directory
+        output_dir = Path("generated_videos")
+        output_dir.mkdir(exist_ok=True)
+        
+        # Step 1: Generate natural, listenable audio
+        print("🎵 Generating natural, listenable audio...")
+        from tools.voice_tool import create_natural_voiceover
+        audio_path = create_natural_voiceover(script)
+        
+        # Step 2: Create HeyGen video with the natural audio
+        print("🎬 Creating HeyGen video with natural audio...")
+        from tools.heygen_video_tool import create_heygen_video
+        video_path = create_heygen_video(script, title)
+        
+        # Clean up temporary audio file
+        os.unlink(audio_path)
+        
+        print(f"✅ HeyGen video with natural audio created successfully: {video_path}")
+        return video_path
+        
+    except Exception as e:
+        raise Exception(f"Failed to create HeyGen video with natural audio: {str(e)}")
+
+
+def create_script_based_video(
+    script: str,
+    title: str = "Viral Moment"
+) -> str:
+    """
+    Create a high-quality video directly from script with professional narration
+    
+    Args:
+        script (str): The script text to convert to video
+        title (str): Video title
+        
+    Returns:
+        str: Path to the generated video file
+    """
+    try:
+        # Create output directory
+        output_dir = Path("generated_videos")
+        output_dir.mkdir(exist_ok=True)
+        
+        # Step 1: Generate high-quality audio directly from script
+        print("🎵 Generating high-quality audio from script...")
+        from tools.voice_tool import create_high_quality_voiceover
+        audio_path = create_high_quality_voiceover(script)
+        
+        # Step 2: Create professional narrator scene
+        print("👤 Creating professional narrator scene...")
+        narrator_scene = create_professional_narrator_scene(script, title)
+        
+        # Step 3: Create video with professional narration
+        print("🎬 Creating professional video...")
+        video_path = create_professional_video(audio_path, narrator_scene, output_dir)
+        
+        # Clean up temporary files
+        os.unlink(audio_path)
+        os.unlink(narrator_scene)
+        
+        print(f"✅ Professional video created successfully: {video_path}")
+        return video_path
+        
+    except Exception as e:
+        raise Exception(f"Failed to create script-based video: {str(e)}")
+
+
 def create_person_narration_video(
     script: str,
     voice_id: str = "21m00Tcm4TlvDq8ikWAM",
@@ -1169,6 +1251,162 @@ def create_person_narration_video(
         
     except Exception as e:
         raise Exception(f"Failed to create person narration video: {str(e)}")
+
+
+def create_professional_narrator_scene(script: str, title: str) -> str:
+    """
+    Create a professional narrator scene with high-quality visuals
+    
+    Args:
+        script (str): Script content
+        title (str): Video title
+        
+    Returns:
+        str: Path to generated scene image
+    """
+    try:
+        # Create a professional, clean design
+        img = Image.new('RGB', (720, 1280), "#0f0f23")
+        draw = ImageDraw.Draw(img)
+        
+        # Create elegant gradient background
+        for y in range(1280):
+            ratio = y / 1280
+            r = int(15 + 30 * ratio)  # 0f to 2d
+            g = int(15 + 50 * ratio)  # 0f to 3d
+            b = int(35 + 40 * ratio)  # 23 to 4b
+            r, g, b = min(255, r), min(255, g), min(255, b)
+            color = (r, g, b)
+            draw.line([(0, y), (720, y)], fill=color)
+        
+        # Draw professional narrator figure
+        person_x = 360  # Center of image
+        person_y = 350  # Person position
+        
+        # Head (professional circle)
+        head_radius = 90
+        draw.ellipse([person_x - head_radius, person_y - head_radius, 
+                     person_x + head_radius, person_y + head_radius], 
+                    fill="#FFD700", outline="#FFFFFF", width=4)
+        
+        # Professional features
+        eye_y = person_y - 25
+        # Eyes
+        draw.ellipse([person_x - 30, eye_y - 12, person_x - 18, eye_y + 12], fill="#000000")
+        draw.ellipse([person_x + 18, eye_y - 12, person_x + 30, eye_y + 12], fill="#000000")
+        
+        # Professional smile
+        mouth_y = person_y + 25
+        draw.arc([person_x - 35, mouth_y - 18, person_x + 35, mouth_y + 18], 0, 180, fill="#000000", width=4)
+        
+        # Professional attire
+        body_width = 140
+        body_height = 220
+        draw.rectangle([person_x - body_width//2, person_y + head_radius, 
+                       person_x + body_width//2, person_y + head_radius + body_height], 
+                      fill="#2C3E50", outline="#FFFFFF", width=3)
+        
+        # Professional collar
+        collar_y = person_y + head_radius + 20
+        draw.rectangle([person_x - 20, collar_y, person_x + 20, collar_y + 40], fill="#FFFFFF")
+        
+        # Arms in professional pose
+        arm_y = person_y + head_radius + 60
+        draw.rectangle([person_x - body_width//2 - 35, arm_y, person_x - body_width//2 - 15, arm_y + 100], 
+                      fill="#FFD700", outline="#FFFFFF", width=2)
+        draw.rectangle([person_x + body_width//2 + 15, arm_y, person_x + body_width//2 + 35, arm_y + 100], 
+                      fill="#FFD700", outline="#FFFFFF", width=2)
+        
+        # Add professional title
+        try:
+            title_font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 52)
+            script_font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 26)
+            narrator_font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 32)
+        except:
+            title_font = ImageFont.load_default()
+            script_font = ImageFont.load_default()
+            narrator_font = ImageFont.load_default()
+        
+        # Title at top
+        draw.text((360, 60), title, font=title_font, fill="#FFD700", anchor="mm")
+        
+        # Professional narrator label
+        draw.text((360, 120), "Professional Narrator", font=narrator_font, fill="#FFFFFF", anchor="mm")
+        
+        # Add script text at bottom with professional styling
+        script_lines = textwrap.wrap(script, width=35)
+        script_y = 900
+        for line in script_lines[:6]:  # Show first 6 lines
+            draw.text((360, script_y), line, font=script_font, fill="#FFFFFF", anchor="mm")
+            script_y += 35
+        
+        # Add professional speaking indicator
+        draw.text((360, 750), "🎤 Professional Narration", font=script_font, fill="#4ECDC4", anchor="mm")
+        
+        # Add professional elements
+        # Microphone icon
+        mic_x, mic_y = 360, 800
+        draw.ellipse([mic_x - 15, mic_y - 15, mic_x + 15, mic_y + 15], fill="#4ECDC4", outline="#FFFFFF", width=2)
+        draw.rectangle([mic_x - 3, mic_y + 15, mic_x + 3, mic_y + 30], fill="#4ECDC4")
+        
+        # Save scene
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_file:
+            img.save(tmp_file.name, 'PNG')
+            return tmp_file.name
+            
+    except Exception as e:
+        raise Exception(f"Failed to create professional narrator scene: {str(e)}")
+
+
+def create_professional_video(audio_path: str, narrator_scene_path: str, output_dir: Path) -> str:
+    """
+    Create a professional video with narrator scene
+    
+    Args:
+        audio_path (str): Path to audio file
+        narrator_scene_path (str): Path to narrator scene image
+        output_dir (Path): Output directory
+        
+    Returns:
+        str: Path to generated video
+    """
+    try:
+        # Get audio duration
+        duration_cmd = [
+            'ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
+            '-of', 'csv=p=0', audio_path
+        ]
+        result = subprocess.run(duration_cmd, capture_output=True, text=True)
+        duration = float(result.stdout.strip())
+        
+        # Generate output filename
+        output_filename = f"professional_video_{int(duration)}s.mp4"
+        output_path = output_dir / output_filename
+        
+        # Create video using ffmpeg
+        ffmpeg_cmd = [
+            'ffmpeg', '-y',  # Overwrite output file
+            '-loop', '1', '-i', narrator_scene_path,  # Input image (loop for duration)
+            '-i', audio_path,  # Input audio
+            '-c:v', 'libx264', '-tune', 'stillimage',  # Video codec
+            '-c:a', 'aac',  # Audio codec
+            '-b:a', '256k',  # Higher audio bitrate for better quality
+            '-pix_fmt', 'yuv420p',  # Pixel format for compatibility
+            '-shortest',  # End when shortest input ends
+            '-t', str(duration),  # Duration
+            str(output_path)
+        ]
+        
+        # Run ffmpeg command
+        result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(f"FFmpeg error: {result.stderr}")
+        
+        print(f"✅ Professional video created: {output_path}")
+        return str(output_path)
+        
+    except Exception as e:
+        raise Exception(f"Failed to create professional video: {str(e)}")
 
 
 def create_person_narration_scene(script: str, speaker_gender: str, title: str) -> str:

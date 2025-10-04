@@ -215,14 +215,13 @@ with tab1:
                     # Play voiceover
                     st.audio(voiceover_path)
                     
-                    # Step 6: Create person narration video
-                    status_text.text("🎬 Step 6/7: Creating person narration video...")
+                    # Step 6: Create HeyGen video with natural audio
+                    status_text.text("🎬 Step 6/7: Creating HeyGen video with natural audio...")
                     progress_bar.progress(85)
                     
-                    from tools.elevenlabs_video_tool import create_person_narration_video
-                    video_path = create_person_narration_video(
+                    from tools.elevenlabs_video_tool import create_heygen_video_with_natural_audio
+                    video_path = create_heygen_video_with_natural_audio(
                         script=script,
-                        speaker_gender=speaker_gender,
                         title="Viral Moment"
                     )
                     

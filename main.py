@@ -238,6 +238,42 @@ async def list_tools() -> list[Tool]:
                 "required": ["script", "transcript"]
             }
         ),
+        Tool(
+            name="create_script_based_video",
+            description="Create a high-quality video directly from script with professional narration",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "script": {
+                        "type": "string",
+                        "description": "Script text for the video"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Video title"
+                    }
+                },
+                "required": ["script"]
+            }
+        ),
+        Tool(
+            name="create_heygen_video",
+            description="Create a professional video using HeyGen with natural, listenable audio",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "script": {
+                        "type": "string",
+                        "description": "Script text for the video"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Video title"
+                    }
+                },
+                "required": ["script"]
+            }
+        ),
     ]
 
 @server.call_tool()
@@ -352,6 +388,24 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             # Create person narration video with appropriate voice
             video_path = create_person_narration_video(script, speaker_gender=speaker_gender, title=title)
             return [TextContent(type="text", text=f"Person narration video created with {speaker_gender} voice: {video_path}")]
+        
+        elif name == "create_script_based_video":
+            from tools.elevenlabs_video_tool import create_script_based_video
+            script = arguments["script"]
+            title = arguments.get("title", "Viral Moment")
+            
+            # Create high-quality video directly from script
+            video_path = create_script_based_video(script, title=title)
+            return [TextContent(type="text", text=f"High-quality script-based video created: {video_path}")]
+        
+        elif name == "create_heygen_video":
+            from tools.elevenlabs_video_tool import create_heygen_video_with_natural_audio
+            script = arguments["script"]
+            title = arguments.get("title", "Viral Moment")
+            
+            # Create HeyGen video with natural audio
+            video_path = create_heygen_video_with_natural_audio(script, title=title)
+            return [TextContent(type="text", text=f"HeyGen video with natural audio created: {video_path}")]
         
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]

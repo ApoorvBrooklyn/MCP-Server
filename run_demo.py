@@ -49,10 +49,13 @@ def main():
 # Get your API key from: https://makersuite.google.com/app/apikey
 GOOGLE_API_KEY=your_google_api_key_here
 
-# Figma API Key and File ID
-# Get your API key from: https://www.figma.com/developers/api#access-tokens
-FIGMA_API_KEY=your_figma_api_key_here
-FIGMA_FILE_ID=your_figma_file_id_here
+# ElevenLabs API Key for high-quality voice generation
+# Get your API key from: https://elevenlabs.io/
+ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+
+# HeyGen API Key for professional video generation
+# Get your API key from: https://heygen.com/
+HEYGEN_API_KEY=your_heygen_api_key_here
 
 # Optional: Whisper model size (base, small, medium, large)
 # base is fastest, large is most accurate

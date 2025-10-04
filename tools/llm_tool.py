@@ -153,24 +153,27 @@ def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") 
             gender_context = " The original speaker appears to be female, so write in a natural, engaging female voice style."
         
         prompt = f"""
-        Create a crisp, focused audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
+        Create a highly engaging, viral-worthy audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts) and designed to maximize engagement.
 
         CRITICAL REQUIREMENTS:
         - ONLY include the viral moments listed below - do not add any extra content, background information, or filler
-        - Start with the most viral moment as a hook (first 3 seconds are crucial)
-        - Create brief, natural transitions between moments
-        - Keep it concise and to the point - every word should add value
-        - Write in a conversational, authentic tone{gender_context}
-        - Use natural speech patterns and pauses
+        - Start with the most viral moment as a powerful hook (first 3 seconds are crucial for retention)
+        - Create smooth, natural transitions between moments using connecting phrases
+        - Keep it concise and impactful - every word should add value and emotion
+        - Write in a conversational, authentic tone that feels natural and engaging
+        - Use natural speech patterns with strategic pauses, emphasis, and rhythm
         - The script should be 30-90 seconds maximum
         - Focus on the most impactful quotes and key points from each moment
-        - Do not add introductions, conclusions, or call-to-actions unless they are part of the original viral moments
-        - Make each moment flow into the next naturally
+        - Add emotional triggers and storytelling elements to make it shareable
+        - Use exclamations, questions, and dramatic pauses where appropriate
+        - Make each moment flow into the next with smooth transitions
+        - Include specific details and examples to make it relatable
+        - End with a strong, memorable closing that encourages sharing
 
         VIRAL MOMENTS TO INCLUDE (ONLY THESE):
         {moment_summary}
 
-        Create a clean, focused audio script that covers ONLY these viral moments. No extra content, no filler, no background information. Just the viral moments in a natural flow.
+        Create a clean, engaging audio script that covers ONLY these viral moments in a compelling narrative flow. Focus on emotional impact, relatability, and shareability. No extra content, no filler, no background information.
 
         Return only the script text, no additional commentary or formatting.
         """
@@ -221,24 +224,27 @@ Moment {i}:
             gender_context = " The original speaker appears to be female, so write in a natural, engaging female voice style."
         
         prompt = f"""
-        Create a crisp, focused audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
+        Create a highly engaging, viral-worthy audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts) and designed to maximize engagement.
 
         CRITICAL REQUIREMENTS:
         - ONLY include the viral moments listed below - do not add any extra content, background information, or filler
-        - Start with the most viral moment as a hook (first 3 seconds are crucial)
-        - Create brief, natural transitions between moments
-        - Keep it concise and to the point - every word should add value
-        - Write in a conversational, authentic tone{gender_context}
-        - Use natural speech patterns and pauses
+        - Start with the most viral moment as a powerful hook (first 3 seconds are crucial for retention)
+        - Create smooth, natural transitions between moments using connecting phrases
+        - Keep it concise and impactful - every word should add value and emotion
+        - Write in a conversational, authentic tone that feels natural and engaging
+        - Use natural speech patterns with strategic pauses, emphasis, and rhythm
         - The script should be 30-90 seconds maximum
         - Focus on the most impactful quotes and key points from each moment
-        - Do not add introductions, conclusions, or call-to-actions unless they are part of the original viral moments
-        - Make each moment flow into the next naturally
+        - Add emotional triggers and storytelling elements to make it shareable
+        - Use exclamations, questions, and dramatic pauses where appropriate
+        - Make each moment flow into the next with smooth transitions
+        - Include specific details and examples to make it relatable
+        - End with a strong, memorable closing that encourages sharing
 
         VIRAL MOMENTS TO INCLUDE (ONLY THESE):
         {moments_text}
 
-        Create a clean, focused audio script that covers ONLY these viral moments. No extra content, no filler, no background information. Just the viral moments in a natural flow.
+        Create a clean, engaging audio script that covers ONLY these viral moments in a compelling narrative flow. Focus on emotional impact, relatability, and shareability. No extra content, no filler, no background information.
 
         Return only the script text, no additional commentary or formatting.
         """

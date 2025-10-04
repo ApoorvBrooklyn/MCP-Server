@@ -11,6 +11,134 @@ from TTS.api import TTS
 import torch
 
 
+def enhance_script_for_natural_speech(script_text: str) -> str:
+    """
+    Enhance script text for natural, listenable speech with proper pacing and emphasis
+    
+    Args:
+        script_text (str): Original script text
+        
+    Returns:
+        str: Enhanced script text optimized for natural speech
+    """
+    # Start with the original script
+    enhanced_script = script_text
+    
+    # Add natural pauses after sentences (not too long, not too short)
+    enhanced_script = re.sub(r'\.(?!\s)', '. ', enhanced_script)
+    enhanced_script = re.sub(r'!(?!\s)', '! ', enhanced_script)
+    enhanced_script = re.sub(r'\?(?!\s)', '? ', enhanced_script)
+    
+    # Add subtle pauses for natural flow (not dramatic)
+    enhanced_script = re.sub(r'\.\s+([A-Z])', '. \\1', enhanced_script)
+    
+    # Make exclamations more natural (not overly dramatic)
+    enhanced_script = re.sub(r'!', '!', enhanced_script)
+    
+    # Add gentle emphasis to important words without being irritating
+    important_words = ['amazing', 'incredible', 'unbelievable', 'shocking', 'surprising', 'wow', 'wait', 'listen', 'here']
+    for word in important_words:
+        # Add subtle emphasis, not dramatic pauses
+        enhanced_script = re.sub(f'\\b{word}\\b', f'{word}', enhanced_script, flags=re.IGNORECASE)
+    
+    # Make numbers more natural to pronounce
+    enhanced_script = re.sub(r'(\d+)%', r'\\1 percent', enhanced_script)
+    enhanced_script = re.sub(r'(\d+)', r'\\1', enhanced_script)
+    
+    # Make questions flow naturally
+    enhanced_script = re.sub(r'\?', '?', enhanced_script)
+    
+    # Add natural speech patterns
+    # Replace "and" with "and" for better flow
+    enhanced_script = re.sub(r'\band\b', 'and', enhanced_script)
+    
+    # Add natural connectors
+    enhanced_script = re.sub(r'\.\s+([A-Z])', '. Now, \\1', enhanced_script)
+    
+    # Clean up multiple spaces but keep natural flow
+    enhanced_script = re.sub(r'\s+', ' ', enhanced_script)
+    
+    # Remove any excessive punctuation that might sound robotic
+    enhanced_script = re.sub(r'\.{3,}', '...', enhanced_script)
+    enhanced_script = re.sub(r'!{2,}', '!', enhanced_script)
+    enhanced_script = re.sub(r'\?{2,}', '?', enhanced_script)
+    
+    return enhanced_script.strip()
+
+
+def create_natural_voiceover(script_text: str) -> str:
+    """
+    Generate natural, listenable voiceover using ElevenLabs with optimized settings
+    
+    Args:
+        script_text (str): Script text to convert to voiceover
+        
+    Returns:
+        str: Path to the generated audio file
+    """
+    try:
+        import requests
+        import tempfile
+        
+        # Use a natural, conversational voice
+        voice_id = "21m00Tcm4TlvDq8ikWAM"  # Adam - Natural, conversational voice
+        
+        # Get API key from environment
+        api_key = os.getenv('ELEVENLABS_API_KEY')
+        if not api_key:
+            raise Exception("ELEVENLABS_API_KEY not found in environment variables")
+        
+        # Create output directory
+        output_dir = Path("generated_audio")
+        output_dir.mkdir(exist_ok=True)
+        
+        # ElevenLabs API endpoint
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        
+        headers = {
+            "Accept": "audio/mpeg",
+            "Content-Type": "application/json",
+            "xi-api-key": api_key
+        }
+        
+        # Enhance the script for natural speech
+        enhanced_script = enhance_script_for_natural_speech(script_text)
+        
+        data = {
+            "text": enhanced_script,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.6,  # Balanced stability for natural variation
+                "similarity_boost": 0.7,  # Good similarity without being robotic
+                "style": 0.3,  # Natural style variation
+                "use_speaker_boost": True
+            }
+        }
+        
+        print(f"Generating natural, listenable voiceover...")
+        
+        # Make API request
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception(f"ElevenLabs API error: {response.status_code} - {response.text}")
+        
+        # Generate unique filename
+        import time
+        timestamp = int(time.time())
+        output_path = output_dir / f"natural_voiceover_{timestamp}.wav"
+        
+        # Save audio to file
+        with open(output_path, 'wb') as f:
+            f.write(response.content)
+        
+        print(f"Natural voiceover generated successfully: {output_path}")
+        return str(output_path)
+        
+    except Exception as e:
+        raise Exception(f"Failed to generate natural voiceover: {str(e)}")
+
+
 def clean_script_for_tts(script_text: str) -> str:
     """
     Clean script text to remove formatting elements that shouldn't be spoken
@@ -121,6 +249,80 @@ def create_voiceover(script_text: str, voice_model: str = None, speaker_gender: 
         
     except Exception as e:
         raise Exception(f"Failed to generate voiceover: {str(e)}")
+
+
+def create_high_quality_voiceover(script_text: str) -> str:
+    """
+    Generate high-quality voiceover using ElevenLabs with a single, professional narrator
+    
+    Args:
+        script_text (str): Script text to convert to voiceover
+        
+    Returns:
+        str: Path to the generated audio file
+    """
+    try:
+        import requests
+        import tempfile
+        
+        # Use a single, high-quality professional narrator voice
+        # This is a premium ElevenLabs voice optimized for narration
+        voice_id = "21m00Tcm4TlvDq8ikWAM"  # Adam - Professional, clear narrator
+        
+        # Get API key from environment
+        api_key = os.getenv('ELEVENLABS_API_KEY')
+        if not api_key:
+            raise Exception("ELEVENLABS_API_KEY not found in environment variables")
+        
+        # Create output directory
+        output_dir = Path("generated_audio")
+        output_dir.mkdir(exist_ok=True)
+        
+        # ElevenLabs API endpoint
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        
+        headers = {
+            "Accept": "audio/mpeg",
+            "Content-Type": "application/json",
+            "xi-api-key": api_key
+        }
+        
+        # Enhance the script for better TTS
+        enhanced_script = enhance_script_for_tts(script_text)
+        
+        data = {
+            "text": enhanced_script,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.8,  # High stability for consistent narration
+                "similarity_boost": 0.8,  # High similarity for voice consistency
+                "style": 0.2,  # Slight style for natural variation
+                "use_speaker_boost": True
+            }
+        }
+        
+        print(f"Generating high-quality voiceover with professional narrator...")
+        
+        # Make API request
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception(f"ElevenLabs API error: {response.status_code} - {response.text}")
+        
+        # Generate unique filename
+        import time
+        timestamp = int(time.time())
+        output_path = output_dir / f"high_quality_voiceover_{timestamp}.wav"
+        
+        # Save audio to file
+        with open(output_path, 'wb') as f:
+            f.write(response.content)
+        
+        print(f"High-quality voiceover generated successfully: {output_path}")
+        return str(output_path)
+        
+    except Exception as e:
+        raise Exception(f"Failed to generate high-quality voiceover: {str(e)}")
 
 
 def create_voiceover_with_elevenlabs(script_text: str, speaker_gender: str = "unknown") -> str:
