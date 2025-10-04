@@ -91,20 +91,6 @@ async def list_tools() -> list[Tool]:
                 "required": ["script_text"]
             }
         ),
-        Tool(
-            name="create_quote_graphic",
-            description="Create a quote graphic using Figma API",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "quote_text": {
-                        "type": "string",
-                        "description": "Quote text to display in the graphic"
-                    }
-                },
-                "required": ["quote_text"]
-            }
-        )
     ]
 
 @server.call_tool()
@@ -143,11 +129,6 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             voiceover_path = create_voiceover(script_text)
             return [TextContent(type="text", text=f"Voiceover created: {voiceover_path}")]
         
-        elif name == "create_quote_graphic":
-            from tools.design_tool import create_quote_graphic
-            quote_text = arguments["quote_text"]
-            graphic_path = create_quote_graphic(quote_text)
-            return [TextContent(type="text", text=f"Quote graphic created: {graphic_path}")]
         
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
@@ -166,7 +147,6 @@ async def main():
     print("- find_viral_moments: Find viral moments using Gemini AI")
     print("- generate_short_script: Generate 60-second scripts")
     print("- create_voiceover: Generate voiceovers using local TTS")
-    print("- create_quote_graphic: Create quote graphics using Figma API")
     
     # Run the server
     await server.run()

@@ -17,7 +17,7 @@ if not api_key:
     raise ValueError("GOOGLE_API_KEY not found in environment variables")
 
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 
 def find_key_moments(transcript: str) -> List[Dict[str, Any]]:
@@ -92,39 +92,81 @@ def find_key_moments(transcript: str) -> List[Dict[str, Any]]:
         raise Exception(f"Failed to analyze transcript: {str(e)}")
 
 
-def generate_short_script(moment_summary: str) -> str:
+def detect_speaker_gender(transcript: str) -> str:
     """
-    Generate a 60-second video script from a viral moment using Gemini AI
+    Detect the gender of the speaker from transcript content using Gemini AI
+    
+    Args:
+        transcript (str): The transcript text to analyze
+        
+    Returns:
+        str: "male", "female", or "unknown"
+    """
+    try:
+        prompt = f"""
+        Analyze this transcript and determine the likely gender of the speaker based on:
+        - Speaking patterns and language use
+        - Self-references and pronouns
+        - Content context clues
+        - Any explicit gender indicators
+
+        Transcript: {transcript[:1000]}...
+
+        Respond with only one word: "male", "female", or "unknown"
+        """
+        
+        response = model.generate_content(prompt)
+        gender = response.text.strip().lower()
+        
+        if gender in ["male", "female", "unknown"]:
+            return gender
+        else:
+            return "unknown"
+            
+    except Exception as e:
+        print(f"Warning: Could not detect speaker gender: {e}")
+        return "unknown"
+
+
+def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") -> str:
+    """
+    Generate a 60-second audio script from a viral moment using Gemini AI
     
     Args:
         moment_summary (str): Summary of the viral moment to create script from
+        speaker_gender (str): Gender of the original speaker ("male", "female", "unknown")
         
     Returns:
-        str: 60-second video script
+        str: 60-second audio script
         
     Raises:
         Exception: If script generation fails
     """
     try:
+        # Add gender context to the prompt
+        gender_context = ""
+        if speaker_gender == "male":
+            gender_context = " The original speaker appears to be male, so write in a natural, engaging male voice style."
+        elif speaker_gender == "female":
+            gender_context = " The original speaker appears to be female, so write in a natural, engaging female voice style."
+        
         prompt = f"""
-        Create a compelling 60-second video script based on this viral moment. The script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
+        Create a compelling 60-second audio script based on this viral moment. The script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
 
         Requirements:
-        - Hook the viewer in the first 3 seconds
+        - Hook the listener in the first 3 seconds
         - Keep it under 60 seconds when spoken
-        - Include clear visual cues in brackets [like this]
         - Make it engaging and shareable
         - End with a strong call-to-action
+        - Write in a conversational, engaging tone
+        - Use natural speech patterns and pauses
+        - Write as if you are the original speaker delivering this content{gender_context}
 
         Viral moment: {moment_summary}
 
-        Format the script with timestamps and visual cues:
-        [0-3s] Hook: [Visual cue] "Opening line that grabs attention"
-        [3-15s] Setup: [Visual cue] "Context and background"
-        [15-45s] Main content: [Visual cue] "The viral moment content"
-        [45-60s] Call to action: [Visual cue] "Ending with engagement"
+        Create a clean audio script that flows naturally from start to finish. Focus on the spoken content only - no visual descriptions, production notes, or formatting instructions.
 
-        Return only the script, no additional commentary.
+        Return only the script text, no additional commentary or formatting.
         """
 
         response = model.generate_content(prompt)

@@ -10,13 +10,14 @@ from TTS.api import TTS
 import torch
 
 
-def create_voiceover(script_text: str, voice_model: str = "tts_models/en/ljspeech/tacotron2-DDC") -> str:
+def create_voiceover(script_text: str, voice_model: str = None, speaker_gender: str = "unknown") -> str:
     """
     Generate voiceover audio from script text using local Coqui TTS
     
     Args:
         script_text (str): Script text to convert to voiceover
-        voice_model (str): TTS model to use (default: ljspeech)
+        voice_model (str): TTS model to use (if None, will auto-select based on gender)
+        speaker_gender (str): Gender of the speaker ("male", "female", "unknown")
         
     Returns:
         str: Path to the generated audio file
@@ -28,6 +29,15 @@ def create_voiceover(script_text: str, voice_model: str = "tts_models/en/ljspeec
         # Create output directory
         output_dir = Path("generated_audio")
         output_dir.mkdir(exist_ok=True)
+        
+        # Select voice model based on gender if not specified
+        if voice_model is None:
+            if speaker_gender == "male":
+                voice_model = "tts_models/en/vctk/vits"  # Male voice model
+            elif speaker_gender == "female":
+                voice_model = "tts_models/en/ljspeech/tacotron2-DDC"  # Female voice model
+            else:
+                voice_model = "tts_models/en/ljspeech/tacotron2-DDC"  # Default female voice
         
         print(f"Loading TTS model: {voice_model}")
         
@@ -41,8 +51,12 @@ def create_voiceover(script_text: str, voice_model: str = "tts_models/en/ljspeec
         
         print(f"Generating voiceover for {len(script_text)} characters...")
         
-        # Generate speech
-        tts.tts_to_file(text=script_text, file_path=str(output_path))
+        # Generate speech with speaker selection for multi-speaker models
+        if "vctk" in voice_model:  # Multi-speaker model
+            # Use a male speaker ID for VCTK model
+            tts.tts_to_file(text=script_text, file_path=str(output_path), speaker="p225")
+        else:
+            tts.tts_to_file(text=script_text, file_path=str(output_path))
         
         print(f"Voiceover generated successfully: {output_path}")
         return str(output_path)

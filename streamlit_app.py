@@ -16,8 +16,6 @@ load_dotenv()
 
 # Check if API keys are already configured
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-FIGMA_API_KEY = os.getenv('FIGMA_API_KEY')
-FIGMA_FILE_ID = os.getenv('FIGMA_FILE_ID')
 
 # Page configuration
 st.set_page_config(
@@ -80,7 +78,7 @@ with st.sidebar:
     st.header("⚙️ Configuration")
     
     # Check if API keys are already loaded from .env
-    keys_configured = GOOGLE_API_KEY and FIGMA_API_KEY and FIGMA_FILE_ID
+    keys_configured = GOOGLE_API_KEY
     
     if keys_configured:
         st.success("✅ API keys loaded from .env file")
@@ -99,21 +97,7 @@ with st.sidebar:
         else:
             st.success("✅ Google API Key configured")
             
-        if not FIGMA_API_KEY:
-            figma_key = st.text_input("Figma API Key", type="password", help="Get from Figma Developers")
-            if figma_key:
-                os.environ['FIGMA_API_KEY'] = figma_key
-                FIGMA_API_KEY = figma_key
-        else:
-            st.success("✅ Figma API Key configured")
-            
-        if not FIGMA_FILE_ID:
-            figma_file_id = st.text_input("Figma File ID", help="Your Figma file ID")
-            if figma_file_id:
-                os.environ['FIGMA_FILE_ID'] = figma_file_id
-                FIGMA_FILE_ID = figma_file_id
-        else:
-            st.success("✅ Figma File ID configured")
+        st.info("🎬 Video generation is ready! Configure ElevenLabs API key for enhanced voice generation.")
     
     st.divider()
     
@@ -127,17 +111,13 @@ with st.sidebar:
     
     # Status
     st.subheader("📊 Status")
-    if GOOGLE_API_KEY and FIGMA_API_KEY and FIGMA_FILE_ID:
+    if GOOGLE_API_KEY:
         st.success("✅ All API keys configured")
         st.info("🚀 Ready to process videos!")
     else:
         missing_keys = []
         if not GOOGLE_API_KEY:
             missing_keys.append("Google API Key")
-        if not FIGMA_API_KEY:
-            missing_keys.append("Figma API Key")
-        if not FIGMA_FILE_ID:
-            missing_keys.append("Figma File ID")
         
         st.error(f"❌ Missing: {', '.join(missing_keys)}")
         st.info("💡 Add missing keys to your .env file or use the sidebar")
@@ -152,7 +132,7 @@ with tab1:
     # YouTube URL input
     youtube_url = st.text_input("📺 YouTube Video URL", placeholder="https://www.youtube.com/watch?v=...")
     
-    if st.button("🚀 Generate Viral Content", type="primary", disabled=not (GOOGLE_API_KEY and FIGMA_API_KEY and FIGMA_FILE_ID)):
+    if st.button("🚀 Generate Viral Content", type="primary", disabled=not GOOGLE_API_KEY):
         if not youtube_url:
             st.error("Please enter a YouTube URL")
         else:
@@ -187,8 +167,12 @@ with tab1:
                 status_text.text("🔍 Step 3/6: Finding viral moments...")
                 progress_bar.progress(50)
                 
-                from tools.llm_tool import find_key_moments
+                from tools.llm_tool import find_key_moments, detect_speaker_gender
                 moments = find_key_moments(transcript)
+                
+                # Detect speaker gender
+                speaker_gender = detect_speaker_gender(transcript)
+                st.info(f"🎤 Detected speaker gender: {speaker_gender.title()}")
                 
                 st.success(f"✅ Found {len(moments)} viral moments")
                 
@@ -211,7 +195,7 @@ with tab1:
                     progress_bar.progress(66)
                     
                     from tools.llm_tool import generate_short_script
-                    script = generate_short_script(moments[0]['summary'])
+                    script = generate_short_script(moments[0]['summary'], speaker_gender)
                     
                     st.success("✅ Script generated")
                     
@@ -220,29 +204,39 @@ with tab1:
                         st.text(script)
                     
                     # Step 5: Create voiceover
-                    status_text.text("🎵 Step 5/6: Creating voiceover...")
-                    progress_bar.progress(83)
+                    status_text.text("🎵 Step 5/7: Creating voiceover...")
+                    progress_bar.progress(71)
                     
                     from tools.voice_tool import create_voiceover
-                    voiceover_path = create_voiceover(script)
+                    voiceover_path = create_voiceover(script, speaker_gender=speaker_gender)
                     
                     st.success(f"✅ Voiceover created: {os.path.basename(voiceover_path)}")
                     
                     # Play voiceover
                     st.audio(voiceover_path)
                     
-                    # Step 6: Create quote graphic
-                    status_text.text("🎨 Step 6/6: Creating quote graphic...")
+                    # Step 6: Create video with ElevenLabs
+                    status_text.text("🎬 Step 6/7: Creating video with ElevenLabs...")
+                    progress_bar.progress(85)
+                    
+                    from tools.elevenlabs_video_tool import create_elevenlabs_video
+                    quote = moments[0].get('quote', 'Sample quote')
+                    video_path = create_elevenlabs_video(
+                        script=script,
+                        quote=quote,
+                        title="Viral Moment"
+                    )
+                    
+                    st.success(f"✅ Video created: {os.path.basename(video_path)}")
+                    
+                    # Display video
+                    st.video(video_path)
+                    
+                    # Step 7: Pipeline complete
+                    status_text.text("✅ Pipeline Complete!")
                     progress_bar.progress(100)
                     
-                    from tools.design_tool import create_quote_graphic
-                    quote = moments[0].get('quote', 'Sample quote')
-                    graphic_path = create_quote_graphic(quote)
-                    
-                    st.success(f"✅ Quote graphic created: {os.path.basename(graphic_path)}")
-                    
-                    # Display graphic
-                    st.image(graphic_path, caption="Generated Quote Graphic", use_column_width=True)
+                    st.success("🎉 All content generated successfully!")
                     
                     # Final results
                     status_text.text("🎉 Pipeline completed successfully!")
@@ -270,12 +264,12 @@ with tab1:
                             )
                     
                     with col3:
-                        with open(graphic_path, "rb") as file:
+                        with open(video_path, "rb") as file:
                             st.download_button(
-                                label="📥 Download Graphic",
+                                label="📥 Download Video",
                                 data=file.read(),
-                                file_name=os.path.basename(graphic_path),
-                                mime="image/png"
+                                file_name=os.path.basename(video_path),
+                                mime="video/mp4"
                             )
                 
             except Exception as e:
@@ -371,20 +365,41 @@ with tab2:
             else:
                 st.error("Please enter script text")
     
-    # Design Tool
-    with st.expander("🎨 Quote Graphics"):
-        quote_text = st.text_input("Quote Text")
-        if st.button("Create Graphic", key="graphic_btn"):
-            if quote_text and FIGMA_API_KEY and FIGMA_FILE_ID:
+    # ElevenLabs Video Tool
+    with st.expander("🎬 ElevenLabs Video Generation"):
+        st.write("Create professional videos using ElevenLabs TTS and visual elements")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            video_script = st.text_area("Video Script", height=100, key="elevenlabs_script")
+            video_quote = st.text_input("Key Quote", key="elevenlabs_quote")
+            video_title = st.text_input("Video Title", value="Viral Moment", key="elevenlabs_title")
+        
+        with col2:
+            voice_id = st.selectbox("Voice", ["21m00Tcm4TlvDq8ikWAM", "AZnzlk1XvdvUeBnXmlld", "EXAVITQu4vr4xnSDxMaL"], key="elevenlabs_voice")
+            bg_color = st.color_picker("Background Color", value="#000000", key="elevenlabs_bg")
+            text_color = st.color_picker("Text Color", value="#FFFFFF", key="elevenlabs_text")
+        
+        if st.button("Create ElevenLabs Video", key="elevenlabs_btn"):
+            if video_script:
                 try:
-                    from tools.design_tool import create_quote_graphic
-                    graphic_path = create_quote_graphic(quote_text)
-                    st.success("Graphic created!")
-                    st.image(graphic_path, use_column_width=True)
+                    from tools.elevenlabs_video_tool import create_elevenlabs_video
+                    video_path = create_elevenlabs_video(
+                        script=video_script,
+                        voice_id=voice_id,
+                        quote=video_quote,
+                        title=video_title,
+                        background_color=bg_color,
+                        text_color=text_color
+                    )
+                    st.success("Video created with ElevenLabs!")
+                    st.video(video_path)
                 except Exception as e:
                     st.error(f"Error: {e}")
             else:
-                st.error("Please enter quote text and configure Figma API keys")
+                st.error("Please enter script text")
+    
 
 with tab3:
     st.header("📁 File Management")
@@ -459,7 +474,6 @@ with tab4:
     
     api_status = {
         "Google Gemini": "✅ Configured" if GOOGLE_API_KEY else "❌ Not configured",
-        "Figma API": "✅ Configured" if FIGMA_API_KEY and FIGMA_FILE_ID else "❌ Not configured"
     }
     
     for api, status in api_status.items():
