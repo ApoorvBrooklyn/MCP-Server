@@ -190,14 +190,14 @@ with tab1:
                             st.write(f"**Confidence:** {moment.get('confidence', 'N/A')}")
                 
                 if moments:
-                    # Step 4: Generate script
-                    status_text.text("📝 Step 4/6: Generating 60-second script...")
+                    # Step 4: Generate comprehensive script from all viral moments
+                    status_text.text("📝 Step 4/6: Generating comprehensive script from all viral moments...")
                     progress_bar.progress(66)
                     
-                    from tools.llm_tool import generate_short_script
-                    script = generate_short_script(moments[0]['summary'], speaker_gender)
+                    from tools.llm_tool import generate_comprehensive_script
+                    script = generate_comprehensive_script(moments, speaker_gender)
                     
-                    st.success("✅ Script generated")
+                    st.success("✅ Comprehensive script generated from all viral moments")
                     
                     # Display script
                     with st.expander("📄 View Generated Script"):
@@ -215,15 +215,14 @@ with tab1:
                     # Play voiceover
                     st.audio(voiceover_path)
                     
-                    # Step 6: Create video with ElevenLabs
-                    status_text.text("🎬 Step 6/7: Creating video with ElevenLabs...")
+                    # Step 6: Create person narration video
+                    status_text.text("🎬 Step 6/7: Creating person narration video...")
                     progress_bar.progress(85)
                     
-                    from tools.elevenlabs_video_tool import create_elevenlabs_video
-                    quote = moments[0].get('quote', 'Sample quote')
-                    video_path = create_elevenlabs_video(
+                    from tools.elevenlabs_video_tool import create_person_narration_video
+                    video_path = create_person_narration_video(
                         script=script,
-                        quote=quote,
+                        speaker_gender=speaker_gender,
                         title="Viral Moment"
                     )
                     

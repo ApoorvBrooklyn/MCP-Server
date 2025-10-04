@@ -4,10 +4,58 @@ Voice Tool - Generate voiceovers using local Coqui TTS
 
 import os
 import tempfile
+import re
 from pathlib import Path
 from typing import Optional
 from TTS.api import TTS
 import torch
+
+
+def clean_script_for_tts(script_text: str) -> str:
+    """
+    Clean script text to remove formatting elements that shouldn't be spoken
+    
+    Args:
+        script_text (str): Raw script text with formatting
+        
+    Returns:
+        str: Cleaned script text ready for TTS
+    """
+    # Remove asterisks used for emphasis (e.g., *years* -> years)
+    script_text = re.sub(r'\*([^*]+)\*', r'\1', script_text)
+    
+    # Remove standalone periods that are used for emphasis (e.g., "Full stop." -> "Full stop")
+    script_text = re.sub(r'\.\s*$', '', script_text, flags=re.MULTILINE)
+    
+    # Remove ellipses that are used for dramatic pause (e.g., "years..." -> "years")
+    script_text = re.sub(r'\.{3,}', '', script_text)
+    
+    # Remove single periods that are used for emphasis (e.g., "Deeply." -> "Deeply")
+    script_text = re.sub(r'^\.\s*$', '', script_text, flags=re.MULTILINE)
+    
+    # Remove brackets and their contents (e.g., [like this])
+    script_text = re.sub(r'\[[^\]]*\]', '', script_text)
+    
+    # Remove parentheses and their contents (e.g., (like this))
+    script_text = re.sub(r'\([^)]*\)', '', script_text)
+    
+    # Remove quotes around single words that are used for emphasis (e.g., "man enough" -> man enough)
+    script_text = re.sub(r'"([^"]+)"', r'\1', script_text)
+    
+    # Remove single quotes around words (e.g., 'man enough' -> man enough)
+    script_text = re.sub(r"'([^']+)'", r'\1', script_text)
+    
+    # Remove multiple spaces and clean up whitespace
+    script_text = re.sub(r'\s+', ' ', script_text)
+    
+    # Remove leading/trailing whitespace
+    script_text = script_text.strip()
+    
+    # Remove empty lines
+    lines = [line.strip() for line in script_text.split('\n') if line.strip()]
+    script_text = '\n'.join(lines)
+    
+    return script_text
 
 
 def create_voiceover(script_text: str, voice_model: str = None, speaker_gender: str = "unknown") -> str:
@@ -33,13 +81,13 @@ def create_voiceover(script_text: str, voice_model: str = None, speaker_gender: 
         # Select voice model based on gender if not specified
         if voice_model is None:
             if speaker_gender == "male":
-                voice_model = "tts_models/en/vctk/vits"  # Male voice model
+                voice_model = "tts_models/en/vctk/vits"  # Multi-speaker model with male voices
             elif speaker_gender == "female":
-                voice_model = "tts_models/en/ljspeech/tacotron2-DDC"  # Female voice model
+                voice_model = "tts_models/en/ljspeech/tacotron2-DDC"  # High-quality female voice
             else:
-                voice_model = "tts_models/en/ljspeech/tacotron2-DDC"  # Default female voice
+                voice_model = "tts_models/en/vctk/vits"  # Default to multi-speaker model
         
-        print(f"Loading TTS model: {voice_model}")
+        print(f"Loading TTS model: {voice_model} for {speaker_gender} speaker")
         
         # Initialize TTS model
         tts = TTS(model_name=voice_model, progress_bar=True)
@@ -47,22 +95,115 @@ def create_voiceover(script_text: str, voice_model: str = None, speaker_gender: 
         # Generate unique filename
         import time
         timestamp = int(time.time())
-        output_path = output_dir / f"voiceover_{timestamp}.wav"
+        output_path = output_dir / f"voiceover_{speaker_gender}_{timestamp}.wav"
         
-        print(f"Generating voiceover for {len(script_text)} characters...")
+        # Clean the script text before TTS
+        cleaned_script = clean_script_for_tts(script_text)
+        print(f"Generating {speaker_gender} voiceover for {len(cleaned_script)} characters...")
         
         # Generate speech with speaker selection for multi-speaker models
         if "vctk" in voice_model:  # Multi-speaker model
-            # Use a male speaker ID for VCTK model
-            tts.tts_to_file(text=script_text, file_path=str(output_path), speaker="p225")
+            # Use appropriate speaker ID based on gender for better quality
+            if speaker_gender == "male":
+                speaker_id = "p225"  # High-quality male speaker
+            elif speaker_gender == "female":
+                speaker_id = "p226"  # High-quality female speaker
+            else:
+                speaker_id = "p225"  # Default to male speaker
+            print(f"Using speaker ID: {speaker_id} for {speaker_gender} voice")
+            tts.tts_to_file(text=cleaned_script, file_path=str(output_path), speaker=speaker_id)
         else:
-            tts.tts_to_file(text=script_text, file_path=str(output_path))
+            # For single-speaker models, use default settings
+            tts.tts_to_file(text=cleaned_script, file_path=str(output_path))
         
         print(f"Voiceover generated successfully: {output_path}")
         return str(output_path)
         
     except Exception as e:
         raise Exception(f"Failed to generate voiceover: {str(e)}")
+
+
+def create_voiceover_with_elevenlabs(script_text: str, speaker_gender: str = "unknown") -> str:
+    """
+    Generate voiceover audio using ElevenLabs TTS with gender-appropriate voice
+    
+    Args:
+        script_text (str): Script text to convert to voiceover
+        speaker_gender (str): Gender of the speaker ("male", "female", "unknown")
+        
+    Returns:
+        str: Path to the generated audio file
+        
+    Raises:
+        Exception: If voice generation fails
+    """
+    try:
+        import requests
+        import tempfile
+        
+        # Voice ID mapping for different genders - using high-quality voices
+        voice_mapping = {
+            "male": "21m00Tcm4TlvDq8ikWAM",      # Adam - Deep, authoritative male voice
+            "female": "EXAVITQu4vr4xnSDxMaL",    # Bella - Clear, engaging female voice  
+            "unknown": "21m00Tcm4TlvDq8ikWAM"    # Default to male voice
+        }
+        
+        voice_id = voice_mapping.get(speaker_gender.lower(), voice_mapping["unknown"])
+        
+        # Get API key from environment
+        api_key = os.getenv('ELEVENLABS_API_KEY')
+        if not api_key:
+            raise Exception("ELEVENLABS_API_KEY not found in environment variables")
+        
+        # Create output directory
+        output_dir = Path("generated_audio")
+        output_dir.mkdir(exist_ok=True)
+        
+        # ElevenLabs API endpoint
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        
+        headers = {
+            "Accept": "audio/mpeg",
+            "Content-Type": "application/json",
+            "xi-api-key": api_key
+        }
+        
+        # Clean the script text
+        cleaned_script = clean_script_for_tts(script_text)
+        
+        data = {
+            "text": cleaned_script,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.75,  # Higher stability for more consistent voice
+                "similarity_boost": 0.75,  # Higher similarity for better voice matching
+                "style": 0.0,
+                "use_speaker_boost": True
+            }
+        }
+        
+        print(f"Generating {speaker_gender} voiceover with ElevenLabs voice {voice_id}...")
+        
+        # Make API request
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception(f"ElevenLabs API error: {response.status_code} - {response.text}")
+        
+        # Generate unique filename
+        import time
+        timestamp = int(time.time())
+        output_path = output_dir / f"voiceover_{speaker_gender}_{timestamp}.wav"
+        
+        # Save audio to file
+        with open(output_path, 'wb') as f:
+            f.write(response.content)
+        
+        print(f"ElevenLabs voiceover generated successfully: {output_path}")
+        return str(output_path)
+        
+    except Exception as e:
+        raise Exception(f"Failed to generate ElevenLabs voiceover: {str(e)}")
 
 
 def create_voiceover_with_emotion(script_text: str, emotion: str = "neutral") -> str:

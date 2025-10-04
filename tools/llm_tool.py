@@ -35,7 +35,7 @@ def find_key_moments(transcript: str) -> List[Dict[str, Any]]:
     """
     try:
         prompt = f"""
-        Analyze this video transcript and identify the 3 most viral-worthy moments that would work well for short-form content (TikTok, Instagram Reels, YouTube Shorts).
+        Analyze this video transcript and identify ALL viral-worthy moments that would work well for short-form content (TikTok, Instagram Reels, YouTube Shorts). Don't limit yourself to a specific number - find as many genuinely viral moments as exist in the content.
 
         For each moment, provide:
         1. A brief summary (1-2 sentences)
@@ -43,6 +43,7 @@ def find_key_moments(transcript: str) -> List[Dict[str, Any]]:
         3. Why it's viral-worthy (humor, shock value, educational, emotional, etc.)
         4. The exact quote or key phrase
         5. Suggested hook for the short video
+        6. Priority level (high/medium/low) for script inclusion
 
         Transcript:
         {transcript}
@@ -55,6 +56,7 @@ def find_key_moments(transcript: str) -> List[Dict[str, Any]]:
                 "viral_factor": "Why this moment is viral-worthy",
                 "quote": "Exact quote or key phrase",
                 "hook": "Suggested opening hook for short video",
+                "priority": "high/medium/low",
                 "confidence": 0.9
             }}
         ]
@@ -130,14 +132,14 @@ def detect_speaker_gender(transcript: str) -> str:
 
 def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") -> str:
     """
-    Generate a 60-second audio script from a viral moment using Gemini AI
+    Generate a dynamic-length audio script from viral moments using Gemini AI
     
     Args:
-        moment_summary (str): Summary of the viral moment to create script from
+        moment_summary (str): Summary of viral moments to create script from (can be single or multiple)
         speaker_gender (str): Gender of the original speaker ("male", "female", "unknown")
         
     Returns:
-        str: 60-second audio script
+        str: Dynamic-length audio script covering all viral moments
         
     Raises:
         Exception: If script generation fails
@@ -151,20 +153,24 @@ def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") 
             gender_context = " The original speaker appears to be female, so write in a natural, engaging female voice style."
         
         prompt = f"""
-        Create a compelling 60-second audio script based on this viral moment. The script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
+        Create a crisp, focused audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
 
-        Requirements:
-        - Hook the listener in the first 3 seconds
-        - Keep it under 60 seconds when spoken
-        - Make it engaging and shareable
-        - End with a strong call-to-action
-        - Write in a conversational, engaging tone
+        CRITICAL REQUIREMENTS:
+        - ONLY include the viral moments listed below - do not add any extra content, background information, or filler
+        - Start with the most viral moment as a hook (first 3 seconds are crucial)
+        - Create brief, natural transitions between moments
+        - Keep it concise and to the point - every word should add value
+        - Write in a conversational, authentic tone{gender_context}
         - Use natural speech patterns and pauses
-        - Write as if you are the original speaker delivering this content{gender_context}
+        - The script should be 30-90 seconds maximum
+        - Focus on the most impactful quotes and key points from each moment
+        - Do not add introductions, conclusions, or call-to-actions unless they are part of the original viral moments
+        - Make each moment flow into the next naturally
 
-        Viral moment: {moment_summary}
+        VIRAL MOMENTS TO INCLUDE (ONLY THESE):
+        {moment_summary}
 
-        Create a clean audio script that flows naturally from start to finish. Focus on the spoken content only - no visual descriptions, production notes, or formatting instructions.
+        Create a clean, focused audio script that covers ONLY these viral moments. No extra content, no filler, no background information. Just the viral moments in a natural flow.
 
         Return only the script text, no additional commentary or formatting.
         """
@@ -177,6 +183,74 @@ def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") 
         
     except Exception as e:
         raise Exception(f"Failed to generate script: {str(e)}")
+
+
+def generate_comprehensive_script(viral_moments: List[Dict[str, Any]], speaker_gender: str = "unknown") -> str:
+    """
+    Generate a comprehensive script from multiple viral moments using Gemini AI
+    
+    Args:
+        viral_moments (List[Dict]): List of viral moments with all details
+        speaker_gender (str): Gender of the original speaker ("male", "female", "unknown")
+        
+    Returns:
+        str: Comprehensive audio script covering all viral moments
+        
+    Raises:
+        Exception: If script generation fails
+    """
+    try:
+        # Format viral moments for the prompt
+        moments_text = ""
+        for i, moment in enumerate(viral_moments, 1):
+            moments_text += f"""
+Moment {i}:
+- Summary: {moment.get('summary', 'N/A')}
+- Quote: {moment.get('quote', 'N/A')}
+- Viral Factor: {moment.get('viral_factor', 'N/A')}
+- Priority: {moment.get('priority', 'medium')}
+- Hook: {moment.get('hook', 'N/A')}
+- Timestamp: {moment.get('timestamp', 'N/A')}
+"""
+        
+        # Add gender context to the prompt
+        gender_context = ""
+        if speaker_gender == "male":
+            gender_context = " The original speaker appears to be male, so write in a natural, engaging male voice style."
+        elif speaker_gender == "female":
+            gender_context = " The original speaker appears to be female, so write in a natural, engaging female voice style."
+        
+        prompt = f"""
+        Create a crisp, focused audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts).
+
+        CRITICAL REQUIREMENTS:
+        - ONLY include the viral moments listed below - do not add any extra content, background information, or filler
+        - Start with the most viral moment as a hook (first 3 seconds are crucial)
+        - Create brief, natural transitions between moments
+        - Keep it concise and to the point - every word should add value
+        - Write in a conversational, authentic tone{gender_context}
+        - Use natural speech patterns and pauses
+        - The script should be 30-90 seconds maximum
+        - Focus on the most impactful quotes and key points from each moment
+        - Do not add introductions, conclusions, or call-to-actions unless they are part of the original viral moments
+        - Make each moment flow into the next naturally
+
+        VIRAL MOMENTS TO INCLUDE (ONLY THESE):
+        {moments_text}
+
+        Create a clean, focused audio script that covers ONLY these viral moments. No extra content, no filler, no background information. Just the viral moments in a natural flow.
+
+        Return only the script text, no additional commentary or formatting.
+        """
+
+        response = model.generate_content(prompt)
+        script = response.text.strip()
+        
+        print(f"Generated comprehensive script (length: {len(script)} characters) covering {len(viral_moments)} viral moments")
+        return script
+        
+    except Exception as e:
+        raise Exception(f"Failed to generate comprehensive script: {str(e)}")
 
 
 def generate_quote_variations(quote: str) -> List[str]:
