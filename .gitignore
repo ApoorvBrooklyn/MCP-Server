@@ -367,3 +367,11 @@ cython_debug/
 !tools/
 !tools/__init__.py
 !tools/*.py
+
+
+generated_videos/
+generated_audio/
+generated_graphics/
+output/
+temp/
+tmp/

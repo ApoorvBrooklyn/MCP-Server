@@ -215,15 +215,28 @@ with tab1:
                     # Play voiceover
                     st.audio(voiceover_path)
                     
-                    # Step 6: Create HeyGen video with natural audio
-                    status_text.text("🎬 Step 6/7: Creating HeyGen video with natural audio...")
+                    # Step 6: Create Wav2Lip video with natural audio
+                    status_text.text("🎬 Step 6/7: Creating Wav2Lip video with ElevenLabs audio...")
                     progress_bar.progress(85)
                     
-                    from tools.elevenlabs_video_tool import create_heygen_video_with_natural_audio
-                    video_path = create_heygen_video_with_natural_audio(
-                        script=script,
-                        title="Viral Moment"
-                    )
+                    try:
+                        from tools.wav2lip_video_tool import create_wav2lip_video_with_audio
+                        video_path = create_wav2lip_video_with_audio(
+                            script=script,
+                            title="Viral Moment"
+                        )
+                    except Exception as wav2lip_error:
+                        st.warning(f"⚠️ Wav2Lip video creation failed: {str(wav2lip_error)}")
+                        st.info("💡 Wav2Lip is a free alternative that requires FFmpeg")
+                        st.info("🔗 Install FFmpeg: https://ffmpeg.org/download.html")
+                        
+                        # Fallback to script-based video
+                        status_text.text("🔄 Fallback: Creating script-based video...")
+                        from tools.elevenlabs_video_tool import create_script_based_video
+                        video_path = create_script_based_video(
+                            script=script,
+                            title="Viral Moment"
+                        )
                     
                     st.success(f"✅ Video created: {os.path.basename(video_path)}")
                     

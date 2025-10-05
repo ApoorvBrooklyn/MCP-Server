@@ -1114,12 +1114,12 @@ def get_available_voices() -> list[Dict[str, Any]]:
         raise Exception(f"Failed to get available voices: {str(e)}")
 
 
-def create_heygen_video_with_natural_audio(
+def create_wav2lip_video_with_natural_audio(
     script: str,
     title: str = "Viral Moment"
 ) -> str:
     """
-    Create a high-quality video using HeyGen with natural, listenable audio
+    Create a high-quality video using Wav2Lip with ElevenLabs natural audio
     
     Args:
         script (str): The script text to convert to video
@@ -1133,24 +1133,24 @@ def create_heygen_video_with_natural_audio(
         output_dir = Path("generated_videos")
         output_dir.mkdir(exist_ok=True)
         
-        # Step 1: Generate natural, listenable audio
-        print("🎵 Generating natural, listenable audio...")
+        # Step 1: Generate natural, lighter audio using ElevenLabs
+        print("🎵 Generating natural, lighter audio using ElevenLabs...")
         from tools.voice_tool import create_natural_voiceover
         audio_path = create_natural_voiceover(script)
         
-        # Step 2: Create HeyGen video with the natural audio
-        print("🎬 Creating HeyGen video with natural audio...")
-        from tools.heygen_video_tool import create_heygen_video
-        video_path = create_heygen_video(script, title)
+        # Step 2: Create Wav2Lip video using the script
+        print("🎬 Creating Wav2Lip video...")
+        from tools.wav2lip_video_tool import create_wav2lip_video_with_audio
+        video_path = create_wav2lip_video_with_audio(script, title)
         
         # Clean up temporary audio file
         os.unlink(audio_path)
         
-        print(f"✅ HeyGen video with natural audio created successfully: {video_path}")
+        print(f"✅ Wav2Lip video created successfully: {video_path}")
         return video_path
         
     except Exception as e:
-        raise Exception(f"Failed to create HeyGen video with natural audio: {str(e)}")
+        raise Exception(f"Failed to create Wav2Lip video: {str(e)}")
 
 
 def create_script_based_video(
@@ -1173,12 +1173,12 @@ def create_script_based_video(
         output_dir.mkdir(exist_ok=True)
         
         # Step 1: Generate high-quality audio directly from script
-        print("🎵 Generating high-quality audio from script...")
-        from tools.voice_tool import create_high_quality_voiceover
-        audio_path = create_high_quality_voiceover(script)
+        print(" Generating high-quality audio from script...")
+        from tools.voice_tool import create_natural_voiceover
+        audio_path = create_natural_voiceover(script)
         
         # Step 2: Create professional narrator scene
-        print("👤 Creating professional narrator scene...")
+        print(" Creating professional narrator scene...")
         narrator_scene = create_professional_narrator_scene(script, title)
         
         # Step 3: Create video with professional narration

@@ -80,8 +80,8 @@ def create_natural_voiceover(script_text: str) -> str:
         import requests
         import tempfile
         
-        # Use a natural, conversational voice
-        voice_id = "21m00Tcm4TlvDq8ikWAM"  # Adam - Natural, conversational voice
+        # Use a lighter, more natural voice (not too deep)
+        voice_id = "EXAVITQu4vr4xnSDxMaL"  # Bella - Clear, engaging, lighter voice
         
         # Get API key from environment
         api_key = os.getenv('ELEVENLABS_API_KEY')
@@ -101,21 +101,24 @@ def create_natural_voiceover(script_text: str) -> str:
             "xi-api-key": api_key
         }
         
-        # Enhance the script for natural speech
-        enhanced_script = enhance_script_for_natural_speech(script_text)
+        # Clean the script thoroughly to remove all problematic formatting
+        cleaned_script = clean_script_for_tts(script_text)
+        
+        # Process entire script without truncation
+        print(f"📝 Processing script of {len(cleaned_script)} characters")
         
         data = {
-            "text": enhanced_script,
+            "text": cleaned_script,
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
-                "stability": 0.6,  # Balanced stability for natural variation
-                "similarity_boost": 0.7,  # Good similarity without being robotic
-                "style": 0.3,  # Natural style variation
+                "stability": 0.5,  # Lower stability for more natural variation
+                "similarity_boost": 0.6,  # Lower similarity for more natural sound
+                "style": 0.4,  # Higher style for more engaging delivery
                 "use_speaker_boost": True
             }
         }
         
-        print(f"Generating natural, listenable voiceover...")
+        print(f"Generating natural, lighter voiceover...")
         
         # Make API request
         response = requests.post(url, json=data, headers=headers)
@@ -141,7 +144,7 @@ def create_natural_voiceover(script_text: str) -> str:
 
 def clean_script_for_tts(script_text: str) -> str:
     """
-    Clean script text to remove formatting elements that shouldn't be spoken
+    Clean script text to remove ALL formatting elements that make audio unbearable
     
     Args:
         script_text (str): Raw script text with formatting
@@ -149,39 +152,44 @@ def clean_script_for_tts(script_text: str) -> str:
     Returns:
         str: Cleaned script text ready for TTS
     """
-    # Remove asterisks used for emphasis (e.g., *years* -> years)
-    script_text = re.sub(r'\*([^*]+)\*', r'\1', script_text)
+    # Remove ALL asterisks and emphasis markers
+    script_text = re.sub(r'\*+([^*]*)\*+', r'\1', script_text)  # Remove *text* or **text**
+    script_text = re.sub(r'_{2,}([^_]*?)_{2,}', r'\1', script_text)  # Remove __text__
+    script_text = re.sub(r'~+([^~]*?)~+', r'\1', script_text)  # Remove ~~text~~
     
-    # Remove standalone periods that are used for emphasis (e.g., "Full stop." -> "Full stop")
-    script_text = re.sub(r'\.\s*$', '', script_text, flags=re.MULTILINE)
+    # Remove ALL brackets and their contents
+    script_text = re.sub(r'\[[^\]]*\]', '', script_text)  # [like this]
+    script_text = re.sub(r'\([^)]*\)', '', script_text)   # (like this)
+    script_text = re.sub(r'\{[^}]*\}', '', script_text)   # {like this}
     
-    # Remove ellipses that are used for dramatic pause (e.g., "years..." -> "years")
-    script_text = re.sub(r'\.{3,}', '', script_text)
+    # Remove ALL quotes and emphasis markers
+    script_text = re.sub(r'"([^"]*)"', r'\1', script_text)  # "text"
+    script_text = re.sub(r"'([^']*)'", r'\1', script_text)  # 'text'
+    script_text = re.sub(r'`([^`]*)`', r'\1', script_text)  # `text`
     
-    # Remove single periods that are used for emphasis (e.g., "Deeply." -> "Deeply")
-    script_text = re.sub(r'^\.\s*$', '', script_text, flags=re.MULTILINE)
+    # Remove ALL punctuation that causes audio issues
+    script_text = re.sub(r'\.{3,}', '.', script_text)  # Replace ... with .
+    script_text = re.sub(r'!{2,}', '!', script_text)   # Replace !! with !
+    script_text = re.sub(r'\?{2,}', '?', script_text)  # Replace ?? with ?
+    script_text = re.sub(r'-{2,}', ' ', script_text)   # Replace -- with space
     
-    # Remove brackets and their contents (e.g., [like this])
-    script_text = re.sub(r'\[[^\]]*\]', '', script_text)
+    # Remove standalone punctuation
+    script_text = re.sub(r'^[.!?]+\s*$', '', script_text, flags=re.MULTILINE)
     
-    # Remove parentheses and their contents (e.g., (like this))
-    script_text = re.sub(r'\([^)]*\)', '', script_text)
+    # Remove special characters that cause audio issues
+    script_text = re.sub(r'[#@$%^&+=|\\/<>]', '', script_text)
     
-    # Remove quotes around single words that are used for emphasis (e.g., "man enough" -> man enough)
-    script_text = re.sub(r'"([^"]+)"', r'\1', script_text)
-    
-    # Remove single quotes around words (e.g., 'man enough' -> man enough)
-    script_text = re.sub(r"'([^']+)'", r'\1', script_text)
-    
-    # Remove multiple spaces and clean up whitespace
-    script_text = re.sub(r'\s+', ' ', script_text)
-    
-    # Remove leading/trailing whitespace
+    # Clean up whitespace and line breaks
+    script_text = re.sub(r'\s+', ' ', script_text)  # Multiple spaces to single space
+    script_text = re.sub(r'\n\s*\n', '\n', script_text)  # Multiple newlines to single
     script_text = script_text.strip()
     
     # Remove empty lines
     lines = [line.strip() for line in script_text.split('\n') if line.strip()]
     script_text = '\n'.join(lines)
+    
+    # Final cleanup - remove any remaining problematic characters
+    script_text = re.sub(r'[^\w\s.,!?]', '', script_text)
     
     return script_text
 

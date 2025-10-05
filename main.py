@@ -257,8 +257,8 @@ async def list_tools() -> list[Tool]:
             }
         ),
         Tool(
-            name="create_heygen_video",
-            description="Create a professional video using HeyGen with natural, listenable audio",
+            name="create_wav2lip_video",
+            description="Create a professional video using Wav2Lip with natural, listenable audio",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -398,14 +398,14 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             video_path = create_script_based_video(script, title=title)
             return [TextContent(type="text", text=f"High-quality script-based video created: {video_path}")]
         
-        elif name == "create_heygen_video":
-            from tools.elevenlabs_video_tool import create_heygen_video_with_natural_audio
+        elif name == "create_wav2lip_video":
+            from tools.wav2lip_video_tool import create_wav2lip_video_with_audio
             script = arguments["script"]
             title = arguments.get("title", "Viral Moment")
             
-            # Create HeyGen video with natural audio
-            video_path = create_heygen_video_with_natural_audio(script, title=title)
-            return [TextContent(type="text", text=f"HeyGen video with natural audio created: {video_path}")]
+            # Create Wav2Lip video with natural audio
+            video_path = create_wav2lip_video_with_audio(script, title=title)
+            return [TextContent(type="text", text=f"Wav2Lip video with natural audio created: {video_path}")]
         
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
