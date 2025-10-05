@@ -1,4 +1,4 @@
-# Viral Moment Pipeline (crisp)
+# Viral Moment Pipeline
 
 Turn long YouTube videos into short, shareable clips. Now simplified: monologue-only scripts, ElevenLabs narration, and a looped background using the repository’s `Sample_Video.mp4`.
 
@@ -78,5 +78,3 @@ viral-moment-pipeline/
 └── generated_videos/
 ```
 
-## License
-MIT
