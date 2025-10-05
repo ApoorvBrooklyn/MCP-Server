@@ -295,8 +295,9 @@ def create_high_quality_voiceover(script_text: str) -> str:
             "xi-api-key": api_key
         }
         
-        # Enhance the script for better TTS
-        enhanced_script = enhance_script_for_tts(script_text)
+        # Clean and optimize the script for better TTS
+        cleaned_script = clean_script_for_tts(script_text)
+        enhanced_script = optimize_script_for_tts(cleaned_script)
         
         data = {
             "text": enhanced_script,

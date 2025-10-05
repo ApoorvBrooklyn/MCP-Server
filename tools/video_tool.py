@@ -8,7 +8,77 @@ import subprocess
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from PIL import Image, ImageDraw, ImageFont
+# MoviePy is optional; only needed for text-based video generation helpers
+try:
+    import moviepy.editor as mp
+except Exception:
+    mp = None  # Lazily required by functions that use MoviePy
 import textwrap
+
+
+def _get_audio_duration_seconds(audio_path: str) -> float:
+    duration_cmd = [
+        'ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
+        '-of', 'csv=p=0', audio_path
+    ]
+    result = subprocess.run(duration_cmd, capture_output=True, text=True)
+    return float(result.stdout.strip())
+
+
+def create_looped_video_with_audio(
+    voiceover_path: str,
+    background_video_path: str,
+    output_path: str | None = None,
+    fps: int = 30,
+    crf: int = 20,
+    preset: str = 'medium'
+) -> str:
+    """
+    Loop a background video to match the voiceover duration and replace its audio.
+    """
+    try:
+        output_dir = Path("generated_videos")
+        output_dir.mkdir(exist_ok=True)
+
+        duration = _get_audio_duration_seconds(voiceover_path)
+        if duration <= 0:
+            raise Exception("Could not determine audio duration")
+
+        if output_path is None:
+            output_path = output_dir / f"loop_video_{int(duration)}s.mp4"
+        else:
+            output_path = Path(output_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Use stream_loop to repeat video frames, trim to duration, and map audio from voiceover
+        cmd = [
+            'ffmpeg', '-y',
+            '-stream_loop', '-1', '-i', background_video_path,
+            '-i', voiceover_path,
+            '-t', str(duration),
+            '-map', '0:v:0', '-map', '1:a:0',
+            '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', str(fps), '-crf', str(crf), '-preset', preset,
+            '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart',
+            str(output_path)
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(f"FFmpeg error: {result.stderr}")
+
+        return str(output_path)
+    except Exception as e:
+        raise Exception(f"Failed to create looped video: {str(e)}")
+
+
+def create_sample_loop_video_from_script(script_text: str, background_video: str = "Sample_Video.mp4") -> str:
+    """
+    Generate ElevenLabs audio from script and loop Sample_Video.mp4 to its duration.
+    """
+    # Use existing ElevenLabs integration for high-quality narration
+    from tools.voice_tool import create_high_quality_voiceover
+    audio_path = create_high_quality_voiceover(script_text)
+    return create_looped_video_with_audio(audio_path, background_video_path=background_video)
 
 
 def create_video_with_voiceover(
@@ -34,6 +104,8 @@ def create_video_with_voiceover(
         str: Path to the generated video file
     """
     try:
+        if mp is None:
+            raise Exception("moviepy is required for create_video_with_voiceover. Install with: pip install moviepy")
         # Create output directory
         output_dir = Path("generated_videos")
         output_dir.mkdir(exist_ok=True)
@@ -85,6 +157,72 @@ def create_video_with_voiceover(
         raise Exception(f"Failed to create video: {str(e)}")
 
 
+def create_text_image(
+    script: str,
+    quote: str,
+    width: int,
+    height: int,
+    background_color: str,
+    text_color: str
+) -> str:
+    """
+    Create a simple PNG with wrapped script text and optional quote.
+    Returns the temporary image path.
+    """
+    tmp_dir = Path("generated_images")
+    tmp_dir.mkdir(exist_ok=True)
+    img_path = tmp_dir / "text_frame.png"
+
+    # Basic font fallback (system default)
+    try:
+        font_title = ImageFont.truetype("Arial.ttf", 40)
+        font_body = ImageFont.truetype("Arial.ttf", 32)
+    except Exception:
+        font_title = ImageFont.load_default()
+        font_body = ImageFont.load_default()
+
+    img = Image.new("RGB", (width, height), background_color)
+    draw = ImageDraw.Draw(img)
+
+    margin = 40
+    y = margin
+    max_text_width = width - margin * 2
+
+    def draw_wrapped(text: str, font: ImageFont.ImageFont, y_pos: int, fill: str) -> int:
+        wrapped = []
+        line = ""
+        for word in text.split():
+            test = (line + " " + word).strip()
+            w, _ = draw.textsize(test, font=font)
+            if w <= max_text_width:
+                line = test
+            else:
+                if line:
+                    wrapped.append(line)
+                line = word
+        if line:
+            wrapped.append(line)
+        for l in wrapped:
+            draw.text((margin, y_pos), l, font=font, fill=fill)
+            y_pos += int(font.size * 1.4)
+        return y_pos
+
+    # Title
+    y = draw_wrapped("Narration", font_title, y, text_color)
+    y += 10
+
+    # Body
+    y = draw_wrapped(script, font_body, y, text_color)
+
+    # Quote
+    if quote:
+        y += 20
+        y = draw_wrapped(f'"{quote}"', font_title, y, "#FFD700")
+
+    img.save(img_path)
+    return str(img_path)
+
+
 def create_text_clips(
     script: str,
     quote: str,
@@ -92,7 +230,7 @@ def create_text_clips(
     height: int,
     text_color: str,
     duration: float
-) -> List[mp.TextClip]:
+) -> List[Any]:
     """
     Create text clips for the video
     
@@ -107,6 +245,8 @@ def create_text_clips(
     Returns:
         List[mp.TextClip]: List of text clips
     """
+    if mp is None:
+        raise Exception("moviepy is required for create_text_clips. Install with: pip install moviepy")
     clips = []
     
     # Split script into segments for different timing
@@ -231,6 +371,8 @@ def create_simple_video(
         str: Path to generated video
     """
     try:
+        if mp is None:
+            raise Exception("moviepy is required for create_simple_video. Install with: pip install moviepy")
         # Create output directory
         output_dir = Path("generated_videos")
         output_dir.mkdir(exist_ok=True)
@@ -319,6 +461,8 @@ def create_quote_video(
         str: Path to generated video
     """
     try:
+        if mp is None:
+            raise Exception("moviepy is required for create_quote_video. Install with: pip install moviepy")
         # Create output directory
         output_dir = Path("generated_videos")
         output_dir.mkdir(exist_ok=True)
@@ -390,5 +534,7 @@ if __name__ == "__main__":
     print("Video tool created successfully!")
     print("Available functions:")
     print("- create_video_with_voiceover()")
+    print("- create_looped_video_with_audio()")
+    print("- create_sample_loop_video_from_script()")
     print("- create_simple_video()")
     print("- create_quote_video()")

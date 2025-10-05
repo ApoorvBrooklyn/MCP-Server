@@ -22,6 +22,30 @@ async def list_tools() -> list[Tool]:
     """
     return [
         Tool(
+            name="create_looped_video_from_script",
+            description="Generate ElevenLabs audio from script and loop Sample_Video.mp4 to match duration",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "script": {"type": "string", "description": "Script text to narrate"},
+                    "background_video": {"type": "string", "description": "Optional background video path (defaults to Sample_Video.mp4)"}
+                },
+                "required": ["script"]
+            }
+        ),
+        Tool(
+            name="create_looped_video_from_audio",
+            description="Loop a background video to a given audio file and replace its audio",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "audio_path": {"type": "string", "description": "Path to narration audio (wav/mp3)"},
+                    "background_video": {"type": "string", "description": "Optional background video path (defaults to Sample_Video.mp4)"}
+                },
+                "required": ["audio_path"]
+            }
+        ),
+        Tool(
             name="download_youtube_audio",
             description="Download audio from a YouTube video URL",
             inputSchema={
@@ -411,6 +435,20 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             # Create Wav2Lip video with natural audio and optional real avatar
             video_path = create_wav2lip_video_with_audio(script, title=title, avatar_image_path=avatar_image_path)
             return [TextContent(type="text", text=f"Wav2Lip video with natural audio created: {video_path}")]
+
+        elif name == "create_looped_video_from_script":
+            from tools.video_tool import create_sample_loop_video_from_script
+            script = arguments["script"]
+            background_video = arguments.get("background_video", "Sample_Video.mp4")
+            video_path = create_sample_loop_video_from_script(script, background_video=background_video)
+            return [TextContent(type="text", text=f"Looped background video created: {video_path}")]
+
+        elif name == "create_looped_video_from_audio":
+            from tools.video_tool import create_looped_video_with_audio
+            audio_path = arguments["audio_path"]
+            background_video = arguments.get("background_video", "Sample_Video.mp4")
+            video_path = create_looped_video_with_audio(audio_path, background_video)
+            return [TextContent(type="text", text=f"Looped background video created: {video_path}")]
         
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]

@@ -115,6 +115,27 @@ def validate_and_improve_script(script: str) -> str:
         # Remove any markdown formatting
         script = script.replace("**", "").replace("*", "").replace("_", "")
         
+        # Remove role labels and stage directions like VOICEOVER:, SFX:, [sound], (music), etc.
+        lines = []
+        for raw_line in script.splitlines():
+            line = raw_line.strip()
+            # Drop bracketed or parenthetical stage directions
+            if (line.startswith("[") and line.endswith("]")) or (line.startswith("(") and line.endswith(")")):
+                continue
+            # Drop obvious role labels like VOICEOVER:, REPORTER:, SFX:, etc.
+            if ":" in line:
+                label, rest = line.split(":", 1)
+                if label.strip().upper() in {"VOICEOVER", "REPORTER", "HOST", "NARRATOR", "SFX", "FX", "MUSIC", "ROCKY", "DONKEY", "SHREK"}:
+                    line = rest.strip()
+            # Remove any remaining inline bracketed/parenthetical annotations
+            import re as _re
+            line = _re.sub(r"\[[^\]]*\]", "", line)
+            line = _re.sub(r"\([^)]*\)", "", line)
+            line = line.strip()
+            if line:
+                lines.append(line)
+        script = " ".join(lines)
+        
         # Remove any "Script:" or "Here's the script:" prefixes
         if script.lower().startswith(("script:", "here's the script:", "script text:")):
             script = script.split(":", 1)[1].strip()
@@ -217,13 +238,13 @@ def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") 
         6. CLARITY: Make it easy to follow and understand
         7. IMPACT: Every sentence should add value or emotion
 
-        WRITING STYLE:
-        - Use short, punchy sentences
-        - Include rhetorical questions ("Can you believe this?")
-        - Add emphasis with repetition ("This is huge. HUGE.")
-        - Use natural speech patterns with pauses
+        WRITING STYLE (STRICT):
+        - Single-person monologue only
+        - NO labels like VOICEOVER:, REPORTER:, SFX:, MUSIC:
+        - NO stage directions or sound cues (no brackets [] or parentheses ())
+        - Use short, punchy sentences and natural speech patterns
         - Include specific details and numbers when available
-        - End with a call-to-action or memorable statement
+        - End with a memorable statement
 
         QUALITY CHECK:
         - Does it grab attention immediately?
@@ -234,7 +255,7 @@ def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") 
 
         {gender_context}
 
-        Create a script that tells a complete, engaging story using ONLY the provided viral moments. Make it impossible to stop watching.
+        Create a script that tells a complete, engaging story using ONLY the provided viral moments. Output only plain script text as a monologue with no labels or cues.
         """
 
         response = model.generate_content(prompt)
@@ -306,16 +327,22 @@ Moment {i}:
         VIRAL MOMENTS TO INCLUDE (ONLY THESE):
         {moments_text}
 
-        Create a clean, engaging audio script that covers ONLY these viral moments in a compelling narrative flow. Focus on emotional impact, relatability, and shareability. No extra content, no filler, no background information.
+        Create a clean, engaging monologue that covers ONLY these viral moments in a compelling narrative flow. Focus on emotional impact, relatability, and shareability. No extra content, no filler, no background information.
 
-        Return only the script text, no additional commentary or formatting.
+        STRICT OUTPUT:
+        - Single-person monologue only
+        - No labels like VOICEOVER:, REPORTER:, SFX:, MUSIC:
+        - No stage directions or sound cues (no [] or ())
+        - Return only plain script text
         """
 
         response = model.generate_content(prompt)
         script = response.text.strip()
         
-        print(f"Generated comprehensive script (length: {len(script)} characters) covering {len(viral_moments)} viral moments")
-        return script
+        # Validate and sanitize to enforce monologue without labels/SFX
+        cleaned_script = validate_and_improve_script(script)
+        print(f"Generated comprehensive script (length: {len(cleaned_script)} characters) covering {len(viral_moments)} viral moments")
+        return cleaned_script
         
     except Exception as e:
         raise Exception(f"Failed to generate comprehensive script: {str(e)}")
