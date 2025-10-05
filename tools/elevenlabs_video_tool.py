@@ -1,7 +1,3 @@
-"""
-ElevenLabs Video Tool - Create professional videos using ElevenLabs TTS and visual elements
-"""
-
 import os
 import tempfile
 import subprocess

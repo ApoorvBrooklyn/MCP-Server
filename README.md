@@ -8,14 +8,9 @@ Turn long YouTube videos into short, shareable clips. Now simplified: monologue-
 - Creates high‑quality narration (ElevenLabs)
 - Loops `Sample_Video.mp4` to match narration length (FFmpeg) and muxes audio
 
-## Key changes (latest)
-- Scripts are plain monologues; all role labels/SFX are stripped
-- Wav2Lip/avatar flow bypassed by default
-- Video is produced by looping `Sample_Video.mp4` with ElevenLabs audio
-- MoviePy is optional; FFmpeg path works without it
 
 ## Requirements
-- Python 3.9+
+- Python 3.11+
 - FFmpeg in PATH (`ffmpeg`, `ffprobe`)
 - API keys in `.env`:
   - `GOOGLE_API_KEY`
@@ -59,10 +54,6 @@ git push
 ## Troubleshooting
 - Missing ElevenLabs key: set `ELEVENLABS_API_KEY` in `.env`
 - FFmpeg not found: install and ensure `ffmpeg`/`ffprobe` are on PATH
-- Optional MoviePy features error: install when needed
-```bash
-pip install moviepy pillow
-```
 
 ## Project structure
 ```

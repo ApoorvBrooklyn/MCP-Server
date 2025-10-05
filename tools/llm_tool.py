@@ -1,7 +1,3 @@
-"""
-LLM Tool - Analyze content and generate scripts using Google Gemini API
-"""
-
 import os
 import json
 from typing import List, Dict, Any

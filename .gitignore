@@ -162,7 +162,7 @@ tmp/
 *.wma
 
 # Video files
-
+*.mp4
 *.avi
 *.mov
 *.wmv
@@ -366,3 +366,5 @@ generated_graphics/
 output/
 temp/
 tmp/
+
+TECHNICAL_DOCUMENTATION.md
