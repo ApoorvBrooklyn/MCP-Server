@@ -19,8 +19,8 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 # Page configuration
 st.set_page_config(
-    page_title="🚀 Viral Moment Pipeline",
-    page_icon="🚀",
+    page_title="Viral Moment Pipeline",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -70,24 +70,24 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<h1 class="main-header">🚀 AI-Powered Viral Moment Content Pipeline</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">AI-Powered Viral Moment Content Pipeline</h1>', unsafe_allow_html=True)
 st.markdown("Transform long-form YouTube videos into viral short-form content automatically!")
 
 # Sidebar for configuration
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header(" Configuration")
     
     # Check if API keys are already loaded from .env
     keys_configured = GOOGLE_API_KEY
     
     if keys_configured:
-        st.success("✅ API keys loaded from .env file")
-        st.info("🔑 All API keys are configured and ready to use!")
+        st.success("API keys loaded from .env file")
+        st.info(" All API keys are configured and ready to use!")
     else:
-        st.warning("⚠️ Some API keys are missing from .env file")
+        st.warning("Some API keys are missing from .env file")
         
         # Only show input fields if keys are missing
-        st.subheader("🔑 Missing API Keys")
+        st.subheader(" Missing API Keys")
         
         if not GOOGLE_API_KEY:
             google_key = st.text_input("Google API Key", type="password", help="Get from Google AI Studio")
@@ -95,14 +95,14 @@ with st.sidebar:
                 os.environ['GOOGLE_API_KEY'] = google_key
                 GOOGLE_API_KEY = google_key
         else:
-            st.success("✅ Google API Key configured")
+            st.success(" Google API Key configured")
             
         st.info("🎬 Video generation is ready! Configure ElevenLabs API key for enhanced voice generation.")
     
     st.divider()
     
     # Settings
-    st.subheader("🎛️ Settings")
+    st.subheader("Settings")
     whisper_model = st.selectbox("Whisper Model", ["base", "small", "medium", "large"], 
                                 index=["base", "small", "medium", "large"].index(os.getenv('WHISPER_MODEL', 'base')))
     os.environ['WHISPER_MODEL'] = whisper_model
@@ -110,29 +110,29 @@ with st.sidebar:
     st.divider()
     
     # Status
-    st.subheader("📊 Status")
+    st.subheader("Status")
     if GOOGLE_API_KEY:
-        st.success("✅ All API keys configured")
-        st.info("🚀 Ready to process videos!")
+        st.success("All API keys configured")
+        st.info("Ready to process videos!")
     else:
         missing_keys = []
         if not GOOGLE_API_KEY:
             missing_keys.append("Google API Key")
         
-        st.error(f"❌ Missing: {', '.join(missing_keys)}")
-        st.info("💡 Add missing keys to your .env file or use the sidebar")
+        st.error(f"Missing: {', '.join(missing_keys)}")
+        st.info("Add missing keys to your .env file or use the sidebar")
 
 # Main content
-tab1, tab2, tab3, tab4 = st.tabs(["🎬 Complete Pipeline", "🔧 Individual Tools", "📁 File Upload", "📊 Analytics"])
+tab1, tab2, tab3, tab4 = st.tabs([" Complete Pipeline", "Individual Tools", "File Upload", "Analytics"])
 
 with tab1:
-    st.header("🎬 Complete Viral Content Pipeline")
+    st.header("Complete Viral Content Pipeline")
     st.markdown("Upload a YouTube URL and get viral content in 6 steps!")
     
     # YouTube URL input
-    youtube_url = st.text_input("📺 YouTube Video URL", placeholder="https://www.youtube.com/watch?v=...")
+    youtube_url = st.text_input("YouTube Video URL", placeholder="https://www.youtube.com/watch?v=...")
     
-    if st.button("🚀 Generate Viral Content", type="primary", disabled=not GOOGLE_API_KEY):
+    if st.button("Generate Viral Content", type="primary", disabled=not GOOGLE_API_KEY):
         if not youtube_url:
             st.error("Please enter a YouTube URL")
         else:
@@ -142,29 +142,29 @@ with tab1:
             
             try:
                 # Step 1: Download YouTube audio
-                status_text.text("📥 Step 1/6: Downloading YouTube audio...")
+                status_text.text("Step 1/6: Downloading YouTube audio...")
                 progress_bar.progress(16)
                 
                 from tools.youtube_tool import get_audio_from_youtube
                 audio_path = get_audio_from_youtube(youtube_url)
                 
-                st.success(f"✅ Audio downloaded: {os.path.basename(audio_path)}")
+                st.success(f"Audio downloaded: {os.path.basename(audio_path)}")
                 
                 # Step 2: Transcribe audio
-                status_text.text("🎤 Step 2/6: Transcribing audio...")
+                status_text.text("Step 2/6: Transcribing audio...")
                 progress_bar.progress(33)
                 
                 from tools.transcription_tool import transcribe_audio
                 transcript = transcribe_audio(audio_path)
                 
-                st.success(f"✅ Transcript completed ({len(transcript)} characters)")
+                st.success(f"Transcript completed ({len(transcript)} characters)")
                 
                 # Display transcript
                 with st.expander("📝 View Full Transcript"):
                     st.text(transcript)
                 
                 # Step 3: Find viral moments
-                status_text.text("🔍 Step 3/6: Finding viral moments...")
+                status_text.text("Step 3/6: Finding viral moments...")
                 progress_bar.progress(50)
                 
                 from tools.llm_tool import find_key_moments, detect_speaker_gender
@@ -174,11 +174,11 @@ with tab1:
                 speaker_gender = detect_speaker_gender(transcript)
                 st.info(f"🎤 Detected speaker gender: {speaker_gender.title()}")
                 
-                st.success(f"✅ Found {len(moments)} viral moments")
+                st.success(f"Found {len(moments)} viral moments")
                 
                 # Display viral moments
                 for i, moment in enumerate(moments, 1):
-                    with st.expander(f"🎯 Viral Moment {i}: {moment.get('summary', 'No summary')[:50]}..."):
+                    with st.expander(f"Viral Moment {i}: {moment.get('summary', 'No summary')[:50]}..."):
                         col1, col2 = st.columns(2)
                         with col1:
                             st.write(f"**Summary:** {moment.get('summary', 'N/A')}")
@@ -191,32 +191,32 @@ with tab1:
                 
                 if moments:
                     # Step 4: Generate comprehensive script from all viral moments
-                    status_text.text("📝 Step 4/6: Generating comprehensive script from all viral moments...")
+                    status_text.text("Step 4/6: Generating comprehensive script from all viral moments...")
                     progress_bar.progress(66)
                     
                     from tools.llm_tool import generate_comprehensive_script
                     script = generate_comprehensive_script(moments, speaker_gender)
                     
-                    st.success("✅ Comprehensive script generated from all viral moments")
+                    st.success("Comprehensive script generated from all viral moments")
                     
                     # Display script
-                    with st.expander("📄 View Generated Script"):
+                    with st.expander("View Generated Script"):
                         st.text(script)
                     
                     # Step 5: Create voiceover
-                    status_text.text("🎵 Step 5/7: Creating voiceover...")
+                    status_text.text(" Step 5/7: Creating voiceover...")
                     progress_bar.progress(71)
                     
                     from tools.voice_tool import create_voiceover
                     voiceover_path = create_voiceover(script, speaker_gender=speaker_gender)
                     
-                    st.success(f"✅ Voiceover created: {os.path.basename(voiceover_path)}")
+                    st.success(f"Voiceover created: {os.path.basename(voiceover_path)}")
                     
                     # Play voiceover
                     st.audio(voiceover_path)
                     
                     # Step 6: Create Wav2Lip video with natural audio
-                    status_text.text("🎬 Step 6/7: Creating Wav2Lip video with ElevenLabs audio...")
+                    status_text.text("Step 6/7: Creating Wav2Lip video with ElevenLabs audio...")
                     progress_bar.progress(85)
                     
                     try:
@@ -226,40 +226,40 @@ with tab1:
                             title="Viral Moment"
                         )
                     except Exception as wav2lip_error:
-                        st.warning(f"⚠️ Wav2Lip video creation failed: {str(wav2lip_error)}")
-                        st.info("💡 Wav2Lip is a free alternative that requires FFmpeg")
-                        st.info("🔗 Install FFmpeg: https://ffmpeg.org/download.html")
+                        st.warning(f"Wav2Lip video creation failed: {str(wav2lip_error)}")
+                        st.info("Wav2Lip is a free alternative that requires FFmpeg")
+                        st.info("Install FFmpeg: https://ffmpeg.org/download.html")
                         
                         # Fallback to script-based video
-                        status_text.text("🔄 Fallback: Creating script-based video...")
+                        status_text.text("Fallback: Creating script-based video...")
                         from tools.elevenlabs_video_tool import create_script_based_video
                         video_path = create_script_based_video(
                             script=script,
                             title="Viral Moment"
                         )
                     
-                    st.success(f"✅ Video created: {os.path.basename(video_path)}")
+                    st.success(f"Video created: {os.path.basename(video_path)}")
                     
                     # Display video
                     st.video(video_path)
                     
                     # Step 7: Pipeline complete
-                    status_text.text("✅ Pipeline Complete!")
+                    status_text.text("Pipeline Complete!")
                     progress_bar.progress(100)
                     
-                    st.success("🎉 All content generated successfully!")
+                    st.success("All content generated successfully!")
                     
                     # Final results
-                    status_text.text("🎉 Pipeline completed successfully!")
+                    status_text.text("Pipeline completed successfully!")
                     
                     # Download section
-                    st.header("📥 Download Generated Content")
+                    st.header("Download Generated Content")
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
                         with open(audio_path, "rb") as file:
                             st.download_button(
-                                label="📥 Download Audio",
+                                label="Download Audio",
                                 data=file.read(),
                                 file_name=os.path.basename(audio_path),
                                 mime="audio/mpeg"
@@ -268,7 +268,7 @@ with tab1:
                     with col2:
                         with open(voiceover_path, "rb") as file:
                             st.download_button(
-                                label="📥 Download Voiceover",
+                                label="Download Voiceover",
                                 data=file.read(),
                                 file_name=os.path.basename(voiceover_path),
                                 mime="audio/wav"
@@ -277,23 +277,23 @@ with tab1:
                     with col3:
                         with open(video_path, "rb") as file:
                             st.download_button(
-                                label="📥 Download Video",
+                                label="Download Video",
                                 data=file.read(),
                                 file_name=os.path.basename(video_path),
                                 mime="video/mp4"
                             )
                 
             except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+                st.error(f"Error: {str(e)}")
                 progress_bar.progress(0)
                 status_text.text("Pipeline failed")
 
 with tab2:
-    st.header("🔧 Individual Tools")
+    st.header("Individual Tools")
     st.markdown("Test each tool individually")
     
     # YouTube Tool
-    with st.expander("📺 YouTube Audio Download"):
+    with st.expander("YouTube Audio Download"):
         youtube_url_tool = st.text_input("YouTube URL", key="youtube_tool")
         if st.button("Download Audio", key="download_btn"):
             if youtube_url_tool:
@@ -308,7 +308,7 @@ with tab2:
                 st.error("Please enter a YouTube URL")
     
     # Transcription Tool
-    with st.expander("🎤 Audio Transcription"):
+    with st.expander("Audio Transcription"):
         uploaded_audio = st.file_uploader("Upload Audio File", type=['mp3', 'wav', 'm4a'])
         if uploaded_audio and st.button("Transcribe Audio", key="transcribe_btn"):
             try:
@@ -328,7 +328,7 @@ with tab2:
                 st.error(f"Error: {e}")
     
     # LLM Tools
-    with st.expander("🤖 AI Analysis"):
+    with st.expander("AI Analysis"):
         transcript_text = st.text_area("Enter transcript text", height=100)
         
         col1, col2 = st.columns(2)
@@ -362,7 +362,7 @@ with tab2:
                     st.error("Please enter moment summary and configure Google API key")
     
     # Voice Tool
-    with st.expander("🎵 Voice Generation"):
+    with st.expander("Voice Generation"):
         script_text = st.text_area("Script Text", height=100)
         if st.button("Generate Voiceover", key="voice_btn"):
             if script_text:
@@ -377,7 +377,7 @@ with tab2:
                 st.error("Please enter script text")
     
     # ElevenLabs Video Tool
-    with st.expander("🎬 ElevenLabs Video Generation"):
+    with st.expander("ElevenLabs Video Generation"):
         st.write("Create professional videos using ElevenLabs TTS and visual elements")
         
         col1, col2 = st.columns(2)
@@ -413,10 +413,10 @@ with tab2:
     
 
 with tab3:
-    st.header("📁 File Management")
+    st.header("File Management")
     
     # Show generated files
-    st.subheader("📂 Generated Files")
+    st.subheader("Generated Files")
     
     # Check for generated directories
     directories = ["downloads", "generated_audio", "generated_graphics"]
@@ -436,7 +436,7 @@ with tab3:
             st.write(f"**{directory.title()}:** (not created yet)")
     
     # File cleanup
-    if st.button("🗑️ Clean Generated Files"):
+    if st.button("Clean Generated Files"):
         for directory in directories:
             if os.path.exists(directory):
                 for file in os.listdir(directory):
@@ -444,10 +444,10 @@ with tab3:
         st.success("Files cleaned up!")
 
 with tab4:
-    st.header("📊 Analytics & Insights")
+    st.header("Analytics & Insights")
     
     # Pipeline statistics
-    st.subheader("📈 Pipeline Statistics")
+    st.subheader("Pipeline Statistics")
     
     # Count files in each directory
     stats = {}
@@ -466,25 +466,25 @@ with tab4:
         st.metric("Graphics", stats.get("generated_graphics", 0))
     
     # Feature overview
-    st.subheader("🎯 Features Overview")
+    st.subheader("Features Overview")
     
     features = [
-        "🎬 YouTube Audio Download",
-        "🎤 Local Audio Transcription", 
-        "🤖 AI Viral Moment Detection",
-        "📝 60-Second Script Generation",
-        "🎵 Local Voice Synthesis",
-        "🎨 Quote Graphic Creation"
+        "YouTube Audio Download",
+        "Local Audio Transcription", 
+        "AI Viral Moment Detection",
+        "60-Second Script Generation",
+        "Local Voice Synthesis",
+        "Quote Graphic Creation"
     ]
     
     for feature in features:
         st.write(feature)
     
     # API Status
-    st.subheader("🔑 API Status")
+    st.subheader("API Status")
     
     api_status = {
-        "Google Gemini": "✅ Configured" if GOOGLE_API_KEY else "❌ Not configured",
+        "Google Gemini": "Configured" if GOOGLE_API_KEY else "Not configured",
     }
     
     for api, status in api_status.items():
@@ -492,5 +492,4 @@ with tab4:
 
 # Footer
 st.markdown("---")
-st.markdown("🚀 **AI-Powered Viral Moment Content Pipeline** - Transform your content into viral moments!")
-st.markdown("Built with ❤️ using Python, Streamlit, and free AI tools")
+st.markdown("**AI-Powered Viral Moment Content Pipeline** - Transform your content into viral moments!")

@@ -37,9 +37,32 @@ numpy>=1.24.0
 torch>=1.9.0
 torchvision>=0.10.0
 
+# Wav2Lip specific dependencies
+face-recognition>=1.3.0
+scipy>=1.11.0
+scikit-image>=0.21.0
+
+# Audio processing for Wav2Lip
+pydub>=0.25.1
+moviepy>=1.0.3
+
 # JSON handling and utilities
 aiofiles>=23.0.0
 
 # Streamlit frontend
 streamlit>=1.28.0
 streamlit-audio-recorder>=0.0.8
+
+# Additional system dependencies
+ffmpeg-python>=0.2.0
+
+# Machine Learning dependencies for Wav2Lip
+tensorflow>=2.13.0
+keras>=2.13.0
+
+# Image processing enhancements
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.8
+
+# Text processing and utilities
+regex>=2023.8.8

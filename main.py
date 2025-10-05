@@ -269,6 +269,10 @@ async def list_tools() -> list[Tool]:
                     "title": {
                         "type": "string",
                         "description": "Video title"
+                    },
+                    "avatar_image_path": {
+                        "type": "string",
+                        "description": "Path to real human avatar image (optional, falls back to animated avatar if not provided)"
                     }
                 },
                 "required": ["script"]
@@ -402,9 +406,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             from tools.wav2lip_video_tool import create_wav2lip_video_with_audio
             script = arguments["script"]
             title = arguments.get("title", "Viral Moment")
+            avatar_image_path = arguments.get("avatar_image_path")
             
-            # Create Wav2Lip video with natural audio
-            video_path = create_wav2lip_video_with_audio(script, title=title)
+            # Create Wav2Lip video with natural audio and optional real avatar
+            video_path = create_wav2lip_video_with_audio(script, title=title, avatar_image_path=avatar_image_path)
             return [TextContent(type="text", text=f"Wav2Lip video with natural audio created: {video_path}")]
         
         else:

@@ -94,6 +94,56 @@ def find_key_moments(transcript: str) -> List[Dict[str, Any]]:
         raise Exception(f"Failed to analyze transcript: {str(e)}")
 
 
+def validate_and_improve_script(script: str) -> str:
+    """
+    Validate and improve script quality
+    
+    Args:
+        script (str): Generated script text
+        
+    Returns:
+        str: Improved script text
+    """
+    try:
+        # Basic validation
+        if not script or len(script.strip()) < 50:
+            raise Exception("Script too short or empty")
+        
+        # Remove common issues
+        script = script.strip()
+        
+        # Remove any markdown formatting
+        script = script.replace("**", "").replace("*", "").replace("_", "")
+        
+        # Remove any "Script:" or "Here's the script:" prefixes
+        if script.lower().startswith(("script:", "here's the script:", "script text:")):
+            script = script.split(":", 1)[1].strip()
+        
+        # Ensure it starts with a hook
+        if not any(script.lower().startswith(hook) for hook in ["you won't believe", "this is crazy", "wait until you hear", "can you believe", "here's what happened"]):
+            # Add a hook if missing
+            script = f"You won't believe what happened here. {script}"
+        
+        # Ensure proper ending
+        if not any(script.lower().endswith(ending) for ending in ["!", "?", "...", "share this", "tell me what you think"]):
+            script += " Share this if you found it interesting!"
+        
+        # Fix common grammar issues
+        script = script.replace("  ", " ")  # Remove double spaces
+        script = script.replace("..", ".")  # Fix double periods
+        
+        # Ensure proper capitalization
+        sentences = script.split(". ")
+        sentences = [sentence.strip().capitalize() for sentence in sentences if sentence.strip()]
+        script = ". ".join(sentences)
+        
+        return script
+        
+    except Exception as e:
+        print(f"⚠️ Script validation failed: {e}")
+        return script
+
+
 def detect_speaker_gender(transcript: str) -> str:
     """
     Detect the gender of the speaker from transcript content using Gemini AI
@@ -153,33 +203,45 @@ def generate_short_script(moment_summary: str, speaker_gender: str = "unknown") 
             gender_context = " The original speaker appears to be female, so write in a natural, engaging female voice style."
         
         prompt = f"""
-        Create a highly engaging, viral-worthy audio script that ONLY includes the viral moments provided below. This script should be optimized for short-form social media platforms (TikTok, Instagram Reels, YouTube Shorts) and designed to maximize engagement.
+        You are an expert content creator specializing in viral short-form videos. Create a compelling, engaging script that transforms the provided viral moments into a cohesive, shareable story.
 
-        CRITICAL REQUIREMENTS:
-        - ONLY include the viral moments listed below - do not add any extra content, background information, or filler
-        - Start with the most viral moment as a powerful hook (first 3 seconds are crucial for retention)
-        - Create smooth, natural transitions between moments using connecting phrases
-        - Keep it concise and impactful - every word should add value and emotion
-        - Write in a conversational, authentic tone that feels natural and engaging
-        - Use natural speech patterns with strategic pauses, emphasis, and rhythm
-        - The script should be 30-90 seconds maximum
-        - Focus on the most impactful quotes and key points from each moment
-        - Add emotional triggers and storytelling elements to make it shareable
-        - Use exclamations, questions, and dramatic pauses where appropriate
-        - Make each moment flow into the next with smooth transitions
-        - Include specific details and examples to make it relatable
-        - End with a strong, memorable closing that encourages sharing
-
-        VIRAL MOMENTS TO INCLUDE (ONLY THESE):
+        VIRAL MOMENTS TO WORK WITH:
         {moment_summary}
 
-        Create a clean, engaging audio script that covers ONLY these viral moments in a compelling narrative flow. Focus on emotional impact, relatability, and shareability. No extra content, no filler, no background information.
+        SCRIPT REQUIREMENTS:
+        1. HOOK (First 3 seconds): Start with the most shocking, surprising, or intriguing moment
+        2. FLOW: Create smooth transitions between moments using connecting phrases like "But here's the thing...", "What's crazy is...", "And then...", "But wait..."
+        3. TONE: Conversational, authentic, and engaging - like talking to a friend
+        4. STRUCTURE: Hook → Build tension → Reveal/Climax → Strong ending
+        5. EMOTION: Include emotional triggers (shock, surprise, humor, relatability)
+        6. CLARITY: Make it easy to follow and understand
+        7. IMPACT: Every sentence should add value or emotion
 
-        Return only the script text, no additional commentary or formatting.
+        WRITING STYLE:
+        - Use short, punchy sentences
+        - Include rhetorical questions ("Can you believe this?")
+        - Add emphasis with repetition ("This is huge. HUGE.")
+        - Use natural speech patterns with pauses
+        - Include specific details and numbers when available
+        - End with a call-to-action or memorable statement
+
+        QUALITY CHECK:
+        - Does it grab attention immediately?
+        - Is it easy to follow from start to finish?
+        - Does it build emotional engagement?
+        - Would someone want to share this?
+        - Is it coherent and logical?
+
+        {gender_context}
+
+        Create a script that tells a complete, engaging story using ONLY the provided viral moments. Make it impossible to stop watching.
         """
 
         response = model.generate_content(prompt)
         script = response.text.strip()
+        
+        # Validate and improve script quality
+        script = validate_and_improve_script(script)
         
         print(f"Generated script (length: {len(script)} characters)")
         return script

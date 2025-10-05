@@ -13,6 +13,37 @@ from PIL import Image, ImageDraw, ImageFont
 import textwrap
 
 
+def find_existing_avatar() -> str:
+    """
+    Look for existing avatar images in the avatars folder
+    
+    Returns:
+        str: Path to existing avatar image, or None if not found
+    """
+    avatars_dir = Path("avatars")
+    if not avatars_dir.exists():
+        return None
+    
+    # Look for common avatar image files
+    avatar_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
+    avatar_names = ['narrator', 'avatar', 'person', 'speaker', 'host']
+    
+    for name in avatar_names:
+        for ext in avatar_extensions:
+            avatar_path = avatars_dir / f"{name}{ext}"
+            if avatar_path.exists():
+                print(f"✅ Found existing avatar: {avatar_path}")
+                return str(avatar_path)
+    
+    # If no specific names found, look for any image file
+    for ext in avatar_extensions:
+        for avatar_file in avatars_dir.glob(f"*{ext}"):
+            print(f"✅ Found existing avatar: {avatar_file}")
+            return str(avatar_file)
+    
+    return None
+
+
 def get_voice_by_gender(speaker_gender: str) -> str:
     """
     Get appropriate ElevenLabs voice ID based on speaker gender
@@ -1409,9 +1440,91 @@ def create_professional_video(audio_path: str, narrator_scene_path: str, output_
         raise Exception(f"Failed to create professional video: {str(e)}")
 
 
+def create_scene_with_existing_avatar(avatar_path: str, script: str, title: str) -> str:
+    """
+    Create a narration scene using an existing avatar image
+    
+    Args:
+        avatar_path (str): Path to existing avatar image
+        script (str): Script content
+        title (str): Video title
+        
+    Returns:
+        str: Path to generated scene image
+    """
+    try:
+        # Load the existing avatar image
+        avatar_img = Image.open(avatar_path)
+        
+        # Convert to RGB if needed
+        if avatar_img.mode != 'RGB':
+            avatar_img = avatar_img.convert('RGB')
+        
+        # Create the scene background
+        img = Image.new('RGB', (720, 1280), "#1a1a2e")
+        draw = ImageDraw.Draw(img)
+        
+        # Create gradient background
+        for y in range(1280):
+            ratio = y / 1280
+            r = int(26 + 50 * ratio)
+            g = int(26 + 100 * ratio)
+            b = int(46 + 80 * ratio)
+            r, g, b = min(255, r), min(255, g), min(255, b)
+            color = (r, g, b)
+            draw.line([(0, y), (720, y)], fill=color)
+        
+        # Resize avatar to fit nicely in the scene
+        avatar_size = 300
+        avatar_img = avatar_img.resize((avatar_size, avatar_size), Image.Resampling.LANCZOS)
+        
+        # Position avatar in the center
+        avatar_x = (720 - avatar_size) // 2
+        avatar_y = 200
+        
+        # Paste avatar onto the background
+        img.paste(avatar_img, (avatar_x, avatar_y))
+        
+        # Add title
+        try:
+            title_font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 48)
+            script_font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 24)
+        except:
+            title_font = ImageFont.load_default()
+            script_font = ImageFont.load_default()
+        
+        # Title at top
+        title_bbox = draw.textbbox((0, 0), title, font=title_font)
+        title_width = title_bbox[2] - title_bbox[0]
+        title_x = (720 - title_width) // 2
+        draw.text((title_x, 50), title, fill="#FFFFFF", font=title_font)
+        
+        # Add script text at bottom
+        script_lines = textwrap.wrap(script, width=40)
+        script_y = 600
+        for line in script_lines[:8]:  # Limit to 8 lines
+            line_bbox = draw.textbbox((0, 0), line, font=script_font)
+            line_width = line_bbox[2] - line_bbox[0]
+            line_x = (720 - line_width) // 2
+            draw.text((line_x, script_y), line, fill="#FFFFFF", font=script_font)
+            script_y += 30
+        
+        # Save the scene
+        import time
+        timestamp = int(time.time())
+        scene_path = f"narration_scene_with_avatar_{timestamp}.png"
+        img.save(scene_path)
+        
+        print(f"✅ Created narration scene with existing avatar: {scene_path}")
+        return scene_path
+        
+    except Exception as e:
+        raise Exception(f"Failed to create scene with existing avatar: {str(e)}")
+
+
 def create_person_narration_scene(script: str, speaker_gender: str, title: str) -> str:
     """
-    Create a scene with a person narrating (using AI-generated person image)
+    Create a scene with a person narrating (using existing avatar or AI-generated person image)
     
     Args:
         script (str): Script content
@@ -1422,7 +1535,14 @@ def create_person_narration_scene(script: str, speaker_gender: str, title: str) 
         str: Path to generated scene image
     """
     try:
-        # Create a person-like figure using simple shapes
+        # First, check if there's an existing avatar we can use
+        existing_avatar = find_existing_avatar()
+        if existing_avatar:
+            print(f"🎭 Using existing avatar for narration scene: {existing_avatar}")
+            return create_scene_with_existing_avatar(existing_avatar, script, title)
+        
+        # If no existing avatar, create a person-like figure using simple shapes
+        print("🎭 No existing avatar found, creating simple person figure...")
         img = Image.new('RGB', (720, 1280), "#1a1a2e")
         draw = ImageDraw.Draw(img)
         
